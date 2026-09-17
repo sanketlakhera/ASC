@@ -155,3 +155,98 @@ class EntryOrderTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         names = [line.split(' | ')[0] for line in result.stdout.splitlines()]
         self.assertEqual(names, ['classes.dex!classes1.dex'] * 2 + ['classes.dex!classes2.dex'] * 2)
+
+
+class CorruptInputTests(unittest.TestCase):
+    """Corrupt or truncated inputs must exit 1 with an explicit Error: message,
+    never leaking internal Python exceptions (struct.error, KeyError, zlib.error)."""
+
+    def test_empty_apk_raises_eocd_error(self):
+        with tempfile.NamedTemporaryFile(suffix='.apk') as f:
+            f.flush()
+            result = run_cli('findrefs', f.name, 'string', 'token')
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('Error: EOCD not found', result.stderr)
+
+    def test_truncated_eocd_raises_error(self):
+        with tempfile.NamedTemporaryFile(suffix='.apk') as f:
+            f.write(b'\x00' * 10 + b'PK\x05\x06' + b'\x00' * 10)
+            f.flush()
+            result = run_cli('findrefs', f.name, 'string', 'token')
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('Error: bad EOCD header', result.stderr)
+
+    def test_truncated_cd_range_raises_error(self):
+        with tempfile.NamedTemporaryFile(suffix='.apk') as f:
+            eocd = b'PK\x05\x06' + b'\x00' * 8 + struct.pack('<IIH', 1000, 1000, 0)
+            f.write(eocd)
+            f.flush()
+            result = run_cli('findrefs', f.name, 'string', 'token')
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('Error: bad central directory range', result.stderr)
+
+    def test_corrupt_deflate_stream_raises_decompression_error(self):
+        with tempfile.NamedTemporaryFile(suffix='.apk') as f:
+            with zipfile.ZipFile(f, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
+                zf.writestr('classes.dex', b'hello world from classes dex')
+            f.seek(0)
+            data = bytearray(f.read())
+            # Corrupt compressed payload at offset 45
+            data[45:55] = b'\xff' * 10
+            f.seek(0)
+            f.write(data)
+            f.flush()
+            result = run_cli('findrefs', f.name, 'string', 'token')
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('Error: corrupt deflate stream in classes.dex', result.stderr)
+
+    def test_truncated_dex_raises_header_error(self):
+        with tempfile.NamedTemporaryFile(suffix='.apk') as f:
+            with zipfile.ZipFile(f, 'w') as zf:
+                zf.writestr('classes.dex', b'dex\n035\x00short')
+            f.flush()
+            result = run_cli('findrefs', f.name, 'string', 'token')
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('Error: bad DEX magic or header size', result.stderr)
+
+    def test_truncated_dex_bodies_raise_clean_errors(self):
+        raw = make_dex()
+        for trunc, expected in ((0x70, 'bad string_ids range'),
+                                (0x90, 'bad string_data offset'),
+                                (0xB0, 'bad string_data offset')):
+            with self.subTest(trunc=hex(trunc)):
+                with tempfile.NamedTemporaryFile(suffix='.apk') as f:
+                    with zipfile.ZipFile(f, 'w') as zf:
+                        zf.writestr('classes.dex', raw[:trunc])
+                    f.flush()
+                    result = run_cli('findrefs', f.name, 'string', 'token')
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(f'Error: {expected}', result.stderr)
+
+    def test_missing_apk_file_raises_error(self):
+        for cmd in ('findrefs', 'getclass', 'getmanifest'):
+            with self.subTest(command=cmd):
+                result = run_cli(cmd, '/nonexistent_file_12345.apk', 'string', 'token') if cmd == 'findrefs' else (
+                    run_cli(cmd, '/nonexistent_file_12345.apk', 'Ltest/Cls;') if cmd == 'getclass' else
+                    run_cli(cmd, '/nonexistent_file_12345.apk')
+                )
+                self.assertEqual(result.returncode, 1)
+                self.assertIn('Error: APK file not found: /nonexistent_file_12345.apk', result.stderr)
+
+    def test_missing_manifest_raises_error(self):
+        with tempfile.NamedTemporaryFile(suffix='.apk') as f:
+            with zipfile.ZipFile(f, 'w') as zf:
+                zf.writestr('classes.dex', b'dummy')
+            f.flush()
+            result = run_cli('getmanifest', f.name)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('Error: AndroidManifest.xml not found in APK', result.stderr)
+
+    def test_bad_zip_manifest_raises_error(self):
+        with tempfile.NamedTemporaryFile(suffix='.apk') as f:
+            f.write(b'not a zip file')
+            f.flush()
+            result = run_cli('getmanifest', f.name)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('Error: bad APK archive: not a valid zip file', result.stderr)
+

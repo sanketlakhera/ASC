@@ -1,3 +1,4 @@
+import os
 import zipfile
 
 
@@ -16,8 +17,16 @@ def _quiet_loguru():
 
 
 def get_manifest_xml(apk_path : str, pretty : bool = True) -> str:
-    with zipfile.ZipFile(apk_path) as zf:
-        manifest_data = zf.read("AndroidManifest.xml")
+    if not os.path.exists(apk_path):
+        raise ValueError(f"APK file not found: {apk_path}")
+    try:
+        with zipfile.ZipFile(apk_path) as zf:
+            try:
+                manifest_data = zf.read("AndroidManifest.xml")
+            except KeyError:
+                raise ValueError("AndroidManifest.xml not found in APK")
+    except zipfile.BadZipFile:
+        raise ValueError("bad APK archive: not a valid zip file")
 
     _quiet_loguru()
     from androguard.core.axml import AXMLPrinter

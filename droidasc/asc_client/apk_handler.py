@@ -54,9 +54,12 @@ def _process_pool_context():
 
 
 def _skip_uleb128(buf, off : int) -> int:
-    while buf[off] & 0x80:
-        off += 1
-    return off + 1
+    try:
+        while buf[off] & 0x80:
+            off += 1
+        return off + 1
+    except IndexError:
+        raise ValueError("unterminated uleb128")
 
 
 def _read_string_data_bytes(buf, str_off : int) -> bytes:
@@ -133,6 +136,8 @@ def _dex_defines_class(buf, target_bytes : bytes) -> bool:
 
 
 def _find_eocd(mm : mmap.mmap) -> int:
+    if len(mm) < 22:
+        return -1
     search_start = max(0, len(mm) - 65536 - 22)
     return mm.rfind(_EOCD_SIG, search_start)
 
@@ -142,9 +147,15 @@ def _parse_cd_dex_entries(mm : mmap.mmap):
     if eocd_idx < 0:
         raise ValueError("EOCD not found")
 
+    if eocd_idx + 22 > len(mm):
+        raise ValueError("bad EOCD header")
+
     cd_size = _U32_FROM(mm, eocd_idx + 12)[0]
     cd_off = _U32_FROM(mm, eocd_idx + 16)[0]
     cd_end = cd_off + cd_size
+    if cd_off > len(mm) or cd_end > len(mm):
+        raise ValueError("bad central directory range")
+
     entries = []
     seen_names = set()
     pos = cd_off
@@ -155,7 +166,7 @@ def _parse_cd_dex_entries(mm : mmap.mmap):
             break
         header_off = pos - 46
         pos += 7
-        if header_off < cd_off or mm[header_off:header_off + 4] != _CD_SIG:
+        if header_off < cd_off or header_off + 46 > cd_end or mm[header_off:header_off + 4] != _CD_SIG:
             continue
 
         name_len = _U16_FROM(mm, header_off + 28)[0]
@@ -194,6 +205,8 @@ def _parse_cd_dex_entries(mm : mmap.mmap):
         comment_len = _U16_FROM(mm, ptr + 32)[0]
         name_start = ptr + 46
         name_end = name_start + name_len
+        if name_end > cd_end:
+            break
         name_bytes = mm[name_start:name_end]
         if name_bytes.endswith(_DEX_SUFFIX) and _SLASH not in name_bytes:
             entries.append((
@@ -235,6 +248,10 @@ def _get_worker_apk_mm(apk_path : str):
         return mm
 
     _close_worker_apk()
+    if not os.path.exists(apk_path):
+        raise ValueError(f"APK file not found: {apk_path}")
+    if os.path.getsize(apk_path) < 22:
+        raise ValueError("EOCD not found")
     fp = open(apk_path, "rb")
     mm = mmap.mmap(fp.fileno(), 0, access=mmap.ACCESS_READ)
     _WORKER_APK_PATH = apk_path
@@ -266,22 +283,27 @@ def _inflate_deflate_chunks(comp_view, stop_event):
 
 def _inflate_dex(mm : mmap.mmap, entry, stop_event = None):
     name, uncomp_size, comp_size, local_header_off, comp_method = entry
-    if mm[local_header_off:local_header_off + 4] != _LH_SIG:
+    if local_header_off + 30 > len(mm) or mm[local_header_off:local_header_off + 4] != _LH_SIG:
         raise ValueError("bad local header signature")
 
     name_len = _U16_FROM(mm, local_header_off + 26)[0]
     extra_len = _U16_FROM(mm, local_header_off + 28)[0]
     data_off = local_header_off + 30 + name_len + extra_len
+    if data_off + comp_size > len(mm):
+        raise ValueError("bad compressed data range")
     comp_view = memoryview(mm)[data_off:data_off + comp_size]
 
-    if comp_method == 0:
-        data = bytes(comp_view)
-    elif comp_method == 8:
-        data = _inflate_deflate_chunks(comp_view, stop_event)
-        if data is None:
-            return None
-    else:
-        raise ValueError(f"unsupported compression method: {comp_method}")
+    try:
+        if comp_method == 0:
+            data = bytes(comp_view)
+        elif comp_method == 8:
+            data = _inflate_deflate_chunks(comp_view, stop_event)
+            if data is None:
+                return None
+        else:
+            raise ValueError(f"unsupported compression method: {comp_method}")
+    except zlib.error:
+        raise ValueError(f"corrupt deflate stream in {name}")
 
     if uncomp_size and len(data) != uncomp_size:
         raise ValueError(f"size mismatch: expect {uncomp_size}, got {len(data)}")
@@ -355,6 +377,10 @@ class ApkHandler:
             print(msg)
 
     def _open_apk(self):
+        if not os.path.exists(self.apk_path):
+            raise ValueError(f"APK file not found: {self.apk_path}")
+        if os.path.getsize(self.apk_path) < 22:
+            raise ValueError("EOCD not found")
         fp = open(self.apk_path, "rb")
         mm = mmap.mmap(fp.fileno(), 0, access=mmap.ACCESS_READ)
         return fp, mm

@@ -69,6 +69,10 @@ class InsnLocator(BaseLocator):
         if pos == 0:
             # code off == 0 means no method body, we dont need to locate it, ignore
             return
+        # No per-method bounds check here: this runs once per method and a
+        # branch on this path costs ~3% on the gated insn_locator benchmark.
+        # A code_off past the end raises struct.error, which parse() maps to
+        # the contract message once per DEX.
         insn_size = _STRUCT_I.unpack_from(data, pos + 12)[0]
         insn_off = pos + 16
         insn_maps = self.insn_maps
@@ -128,10 +132,13 @@ class InsnLocator(BaseLocator):
         # dont reuse tinydex, frequent lazy parser may cause bad performance
         # parse all items in one shot by map!
         buf = self.buf
-        if not self.mapoff:
+        if not self.mapoff or self.mapoff + 4 > len(buf):
             self._build_map_bydef()
             return
         mapsize = _STRUCT_I.unpack_from(buf, self.mapoff)[0]
+        if self.mapoff + 4 + mapsize * 12 > len(buf):
+            self._build_map_bydef()
+            return
         mtype = None
         mapoff = self.mapoff + 4
         for i in range(mapsize):
@@ -144,6 +151,9 @@ class InsnLocator(BaseLocator):
             return None
 
         # skip type + unused
+        if mapoff + 12 > len(buf):
+            self._build_map_bydef()
+            return None
         class_data_size, class_data_off = struct.unpack_from("<II", buf, mapoff + 4)
         data = bytes(buf) # for performance
         for _ in range(class_data_size):
@@ -154,6 +164,8 @@ class InsnLocator(BaseLocator):
             return
         class_def_off, class_def_size = self.header.classes
         buf = self.buf
+        if class_def_off + class_def_size * 32 > len(buf):
+            raise ValueError("bad class_defs range")
         data = bytes(buf)
         for i in range(class_def_size):
             class_data_off = _STRUCT_I.unpack_from(buf, class_def_off + 24)[0]
@@ -166,7 +178,11 @@ class InsnLocator(BaseLocator):
         if self.parsed:
             return
         t_start = time.perf_counter() if self.debug else None
-        self._build_map_bymap()
+        try:
+            self._build_map_bymap()
+        except struct.error:
+            # the only unguarded unpack on this path reads a code_item header
+            raise ValueError("bad code_item offset")
         tmp_list = self.insn_maps.keys()
         if tmp_list:
             self.code_item_start = min(tmp_list) << 4

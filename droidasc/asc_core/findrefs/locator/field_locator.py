@@ -32,6 +32,8 @@ class FieldLocator(BaseLocator):
         clz_maps = self.clz_maps
         field_maps = self.field_maps
         buf = self.buf
+        if field_ids_off + field_ids_size * 8 > len(buf):
+            raise ValueError("bad field_ids range")
 
         for field_idx in range(field_ids_size):
             class_idx, _, name_idx = _STRUCT_HHI.unpack_from(buf, field_ids_off)
@@ -46,8 +48,10 @@ class FieldLocator(BaseLocator):
     def _find_type_idx_precisely(self, clz : str):
         left = 0
         type_ids_off, type_ids_size = self.header.types
-        right = type_ids_size - 1
         buf = self.buf
+        if type_ids_off + type_ids_size * 4 > len(buf):
+            raise ValueError("bad type_ids range")
+        right = type_ids_size - 1
         get_string_bytes = self.dex.get_string_bytes
         # type_ids are sorted by descriptor MUTF-8 bytes, so compare bytes
         target = encode_mutf8(clz)

@@ -28,3 +28,10 @@ temp/
 
 # Test fixture exception
 !tests/fixtures/reference-workload.zip
+
+# Conformance harness exception
+!rust/conformance/**
+# uv lockfile: repo installs from requirements.txt; the oracle env is pinned separately
+uv.lock
+# the exception above also re-included bytecode caches under the harness
+rust/conformance/__pycache__/

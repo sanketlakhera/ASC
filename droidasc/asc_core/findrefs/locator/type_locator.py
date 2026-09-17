@@ -23,6 +23,8 @@ class TypeLocator(BaseLocator):
         type_ids_off, type_ids_size = self.header.types
         type_maps = self.type_maps
         buf = self.buf
+        if type_ids_off + type_ids_size * 4 > len(buf):
+            raise ValueError("bad type_ids range")
 
         for type_idx in range(type_ids_size):
             str_idx = _STRUCT_I.unpack_from(buf, type_ids_off)[0]

@@ -10,6 +10,8 @@ _STRUCT_HHHHII = struct.Struct('<HHHHII')
 
 class DEXHeader:
     def __init__(self, buf):
+        if len(buf) < 0x70 or buf[:3] != b"dex":
+            raise ValueError("bad DEX magic or header size")
         # (off, size)
         # 0x3c offset == ids_off, 0x38 offset == ids_size
         self.strings = (_STRUCT_I.unpack_from(buf, 0x3C)[0], _STRUCT_I.unpack_from(buf, 0x38)[0])
@@ -354,14 +356,19 @@ class DEX:
 
     def _read_string_bytes(self, str_idx):
         str_idx_off = self.header.strings[0]
+        string_ids_size = self.header.strings[1]
+        if str_idx >= string_ids_size or str_idx_off + str_idx * 4 + 4 > len(self.buf):
+            raise ValueError("bad string_ids range")
         string_off = _STRUCT_I.unpack_from(self.buf, str_idx_off + str_idx * 4)[0]
+        if string_off >= len(self.buf):
+            raise ValueError("bad string_data offset")
         utf16_size, c = read_uleb128_fast(self.buf, string_off)
         data_start = string_off + c
         raw = self._raw
         if raw is not None:
             end = raw.find(b'\x00', data_start)
             if end < 0:
-                end = len(raw)
+                raise ValueError("unterminated string_data_item")
             return bytes(raw[data_start:end])
         # buf is a slice of a larger object: offsets do not line up with the
         # underlying buffer, so search a bounded copy instead. The uleb128
@@ -370,7 +377,7 @@ class DEX:
         chunk = bytes(self.buf[data_start:data_start + utf16_size * 3 + 1])
         end = chunk.find(b'\x00')
         if end < 0:
-            end = len(chunk)
+            raise ValueError("unterminated string_data_item")
         return chunk[:end]
 
     # lazy parse
@@ -412,6 +419,9 @@ class DEX:
         
         if type_idx not in self._types:
             off = self.header.types[0]
+            type_ids_size = self.header.types[1]
+            if type_idx >= type_ids_size or off + type_idx * 4 + 4 > len(self.buf):
+                raise ValueError("bad type_ids range")
             type_off = off + type_idx * 4
             str_idx = _STRUCT_I.unpack_from(self.buf, type_off)[0]
             self._types[type_idx] = Type(self.strings[str_idx])
