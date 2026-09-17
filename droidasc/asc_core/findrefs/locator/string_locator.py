@@ -1,6 +1,7 @@
 from .base_locator import BaseLocator
 import struct
 from ...utils.leb128 import read_uleb128_len
+from ...utils.mutf8 import encode_mutf8
 import re
 import time
 
@@ -46,7 +47,10 @@ class StringLocator(BaseLocator):
 
     def _match_string_offset(self, string : str):
         buf = self.buf
-        string = string.encode('utf-8')
+        # The query is a bytes regex run over MUTF-8 payloads, so encode its
+        # literal characters the same way (NUL -> C0 80, non-BMP -> surrogate
+        # pair). Regex metacharacters are ASCII and unaffected.
+        string = encode_mutf8(string)
         strdata_start = self.strdata_start
         strdata_end = self.strdata_end
         submem = buf[strdata_start: strdata_end]

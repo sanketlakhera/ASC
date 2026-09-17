@@ -10,6 +10,7 @@ import zlib
 from concurrent.futures import ThreadPoolExecutor, FIRST_COMPLETED, wait
 
 from droidasc.asc_client.dex_container import iter_logical_dex_buffers
+from droidasc.asc_core.utils.mutf8 import encode_mutf8
 
 
 _U16 = struct.Struct("<H")
@@ -359,7 +360,7 @@ class ApkHandler:
         return fp, mm
 
     def get_class_dex(self, dalvik_class : str):
-        target_bytes = dalvik_class.encode("utf-8")
+        target_bytes = encode_mutf8(dalvik_class)
         t_start = time.perf_counter()
         fp, mm = self._open_apk()
         try:
@@ -371,7 +372,14 @@ class ApkHandler:
             if not entries:
                 return None
 
-            stop_event = threading.Event()
+            # Contract: if several DEX entries define the class, the winner is
+            # the first one in `entries` order (ascending compressed size, ties
+            # in central-directory order). Entries are submitted in that order,
+            # so when entry k hits, every entry before k is already submitted;
+            # keep waiting for those still in flight and abandon the rest. Each
+            # submission gets its own stop event so later entries can be
+            # abandoned without cancelling earlier ones.
+            hit_idx = None
             hit_name = None
             hit_data = None
             cap = min(len(entries), max(6, min(self.max_workers, 12)))
@@ -380,29 +388,34 @@ class ApkHandler:
                 inflight = {}
                 idx = 0
                 while idx < len(entries) or inflight:
-                    while idx < len(entries) and len(inflight) < cap and not stop_event.is_set():
+                    while idx < len(entries) and len(inflight) < cap and hit_idx is None:
                         entry = entries[idx]
-                        idx += 1
+                        stop_event = threading.Event()
                         fut = ex.submit(_inflate_and_hit, mm, entry, target_bytes, stop_event, self._log)
-                        inflight[fut] = entry
+                        inflight[fut] = (idx, stop_event)
+                        idx += 1
 
                     if not inflight:
                         break
 
                     done, _pending = wait(list(inflight.keys()), return_when=FIRST_COMPLETED)
                     for fut in done:
-                        entry = inflight.pop(fut)
+                        entry_idx, _event = inflight.pop(fut)
                         ok, dex_name, data = fut.result()
-                        if ok:
+                        if ok and (hit_idx is None or entry_idx < hit_idx):
+                            hit_idx = entry_idx
                             hit_name = dex_name
                             hit_data = data
-                            stop_event.set()
-                            break
 
-                    if hit_name is not None:
-                        for fut in inflight:
-                            fut.cancel()
-                        break
+                    if hit_idx is not None:
+                        for fut, (entry_idx, event) in list(inflight.items()):
+                            if entry_idx > hit_idx:
+                                event.set()
+                                fut.cancel()
+                                if fut.cancelled():
+                                    inflight.pop(fut)
+                        if all(entry_idx > hit_idx for entry_idx, _event in inflight.values()):
+                            break
 
             if self.debug:
                 t_end = time.perf_counter()
@@ -436,24 +449,32 @@ class ApkHandler:
         # buffers; flush first so it cannot be emitted a second time on exit
         sys.stdout.flush()
         sys.stderr.flush()
+        # Contract: results are yielded in `entries` order (ascending compressed
+        # size, ties in central-directory order), whatever order the workers
+        # finish in. Completed results ahead of the cursor are buffered.
         with ProcessPoolExecutor(max_workers=self.max_workers,
                                  mp_context=_process_pool_context()) as ex:
             futures = {}
-            for entry in entries:
+            for entry_idx, entry in enumerate(entries):
                 fut = ex.submit(_findrefs_worker, self.apk_path, entry, find_type, find)
-                futures[fut] = entry[0]
+                futures[fut] = entry_idx
 
+            ready = {}
+            next_idx = 0
             while futures:
                 done, _pending = wait(list(futures.keys()), return_when=FIRST_COMPLETED)
                 for fut in done:
-                    futures.pop(fut)
+                    entry_idx = futures.pop(fut)
                     dex_name, lines, inflate_us, process_us, pid = fut.result()
                     if self.debug:
                         self._log(
                             f"[APK] [P{pid}] '{dex_name}' inflate={inflate_us:.2f} us "
                             f"process={process_us:.2f} us"
                         )
-                    yield dex_name, lines
+                    ready[entry_idx] = (dex_name, lines)
+                while next_idx in ready:
+                    yield ready.pop(next_idx)
+                    next_idx += 1
 
         if self.debug:
             t_end = time.perf_counter()

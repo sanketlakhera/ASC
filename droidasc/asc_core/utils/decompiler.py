@@ -96,9 +96,78 @@ androguard_dex.HeaderItem.__init__ = monkey_header_init
 
 from androguard.decompiler import decompile
 from androguard.decompiler import util as androguard_util
+from androguard.decompiler import basic_blocks as androguard_basic_blocks
+from androguard.decompiler import instruction as androguard_instruction
+from androguard.decompiler import node as androguard_node
 from androguard.core.analysis.analysis import MethodAnalysis
 import androguard.core.androconf as androconf
 import functools
+import itertools
+import re
+
+
+# --- Deterministic variable declarations ---
+# DAD collects the variables a block must declare in a set of Variable objects.
+# Variables hash by identity, so the declaration order (and therefore the
+# decompiled text) changed from run to run. Keep the set semantics the writer
+# relies on (add / in / len / iteration) but iterate in a stable order: by the
+# numeric parts of the variable name, so v0_11 comes before v7_3 before v8_6.
+class _DeclarationSet(dict):
+    def add(self, variable):
+        self[variable] = None
+
+    @staticmethod
+    def _key(variable):
+        name = str(getattr(variable, 'name', variable))
+        return ([int(part) for part in re.findall(r'\d+', name)], name)
+
+    def __iter__(self):
+        return iter(sorted(self.keys(), key=self._key))
+
+
+original_basic_block_init = androguard_basic_blocks.BasicBlock.__init__
+
+
+def deterministic_basic_block_init(self, *args, **kwargs):
+    original_basic_block_init(self, *args, **kwargs)
+    self.var_to_declare = _DeclarationSet()
+
+
+androguard_basic_blocks.BasicBlock.__init__ = deterministic_basic_block_init
+
+
+# --- Deterministic set iteration for graph nodes, intervals and IR forms ---
+# DAD keeps nodes, intervals and IR objects in sets and dicts throughout
+# structuring and dataflow (interval contents, loop node lists, update work
+# lists). None of these classes define __hash__, so they hash by address and
+# every such set iterates in a different order per process; one visible effect
+# is a loop structured as `while(true)` in one run and `do {} while` in the
+# next. Hash by creation order instead: still unique per object, equality still
+# identity, but stable from run to run. Objects that skip __init__ get their
+# number on first hash.
+_creation_counter = itertools.count()
+
+
+def _install_creation_order_hash(cls):
+    original_init = cls.__init__
+
+    def init(self, *args, **kwargs):
+        self._asc_seq = next(_creation_counter)
+        original_init(self, *args, **kwargs)
+
+    def stable_hash(self):
+        try:
+            return self._asc_seq
+        except AttributeError:
+            self._asc_seq = next(_creation_counter)
+            return self._asc_seq
+
+    cls.__init__ = init
+    cls.__hash__ = stable_hash
+
+
+for _cls in (androguard_node.Node, androguard_node.Interval, androguard_instruction.IRForm):
+    _install_creation_order_hash(_cls)
 
 # --- Androguard String Operations & Type Parsing Optimizations ---
 # Dalvik bytecode formatting and access flag resolution generates a massive amount

@@ -186,6 +186,15 @@ def main():
     parser = _build_main_parser()
     args = parser.parse_args()
 
+    # DEX strings may hold lone UTF-16 surrogates, which Python's str carries
+    # but a strict UTF-8 stream refuses. Match the -o file policy (replace).
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(errors="replace")
+            except (ValueError, OSError):
+                pass
+
     try:
         if args.command == "getclass":
             _handle_getclass(args)

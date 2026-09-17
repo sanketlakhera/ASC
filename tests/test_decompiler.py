@@ -8,7 +8,7 @@ import tempfile
 import unittest
 import zipfile
 
-from dex_fixture import make_dex, make_static_field_dex
+from dex_fixture import make_axml, make_dex, make_dex041_container, make_static_field_dex
 from droidasc.asc_core.core.dex.dex_manager import DexManager
 from droidasc.asc_core.utils.dex_parser import parse_encoded_array
 from droidasc.asc_core.utils.tinydex import DEX
@@ -79,6 +79,77 @@ assert sys.modules['mutf8.cmutf8'].decode_modified_utf8.__module__ == '_asc_clie
                         cwd=ROOT, capture_output=True, text=True, timeout=30)
                     self.assertEqual(source.returncode, 0, source.stderr)
                     self.assertIn('class Test', source.stdout)
+
+    def test_getclass_prefers_smallest_entry_when_class_is_defined_twice(self):
+        other = make_dex(strings=[b'Lexample/Test;', b'Ljava/lang/Object;', b'V', b'fourth', b'third', b'token'])
+        with tempfile.TemporaryDirectory() as directory:
+            apk = Path(directory) / 'fixture.apk'
+            with zipfile.ZipFile(apk, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr('classes.dex', make_dex(padding=6000))
+                archive.writestr('classes2.dex', other)
+            outputs = []
+            for _ in range(3):
+                result = subprocess.run(
+                    [sys.executable, str(ROOT / 'main.py'), 'getclass', str(apk), 'example.Test', '--threads', '2'],
+                    cwd=ROOT, capture_output=True, text=True, timeout=30)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                outputs.append(result.stdout)
+        for source in outputs:
+            self.assertIn('void fourth()', source)
+            self.assertNotIn('void first()', source)
+        self.assertEqual(len(set(outputs)), 1)
+
+    def test_getclass_from_dex041_container(self):
+        with tempfile.TemporaryDirectory() as directory:
+            apk = Path(directory) / 'fixture.apk'
+            with zipfile.ZipFile(apk, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
+                archive.writestr('classes.dex', make_dex041_container({'padding': 64}, {}))
+            result = subprocess.run(
+                [sys.executable, str(ROOT / 'main.py'), 'getclass', str(apk), 'example.Test', '--threads', '1'],
+                cwd=ROOT, capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('class Test', result.stdout)
+
+    def test_getmanifest_decodes_binary_xml(self):
+        with tempfile.TemporaryDirectory() as directory:
+            apk = Path(directory) / 'fixture.apk'
+            output = Path(directory) / 'AndroidManifest.xml'
+            with zipfile.ZipFile(apk, 'w') as archive:
+                archive.writestr('AndroidManifest.xml', make_axml())
+                archive.writestr('classes.dex', make_dex())
+            result = subprocess.run(
+                [sys.executable, str(ROOT / 'main.py'), 'getmanifest', str(apk), '-o', str(output)],
+                cwd=ROOT, capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stderr, '')
+            self.assertIn('package="example.app"', result.stdout)
+            self.assertIn('android:versionCode="1"', result.stdout)
+            self.assertIn('<application/>', result.stdout)
+            # stdout is print()ed (adds a newline); the -o file gets the text
+            # plus a newline only if it lacked one
+            self.assertEqual(result.stdout, output.read_text(encoding='utf-8') + '\n')
+
+    def test_decompiled_source_is_identical_across_processes(self):
+        # DAD used to declare local variables in set order, which changed per
+        # process. Decompile a class with several declarations twice, in two
+        # interpreters, and require identical text.
+        script = """
+import sys, zipfile
+sys.path.insert(0, '.')
+from droidasc.asc_client.asc_handler import AscHandler
+with zipfile.ZipFile('tests/fixtures/reference-workload.zip') as archive:
+    dex = archive.read('classes.dex')
+for name in ('Landroidx/appcompat/widget/DropDownListView;', 'Landroidx/core/view/NestedScrollingChildHelper;'):
+    sys.stdout.write(AscHandler().getclass(dex, name))
+"""
+        outputs = []
+        for _ in range(2):
+            result = subprocess.run([sys.executable, '-c', script], cwd=ROOT,
+                                    capture_output=True, text=True, timeout=120)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            outputs.append(result.stdout)
+        self.assertIn('class DropDownListView', outputs[0])
+        self.assertEqual(outputs[0], outputs[1])
 
     def test_gui_store_can_decompile_twice_and_then_search(self):
         from droidasc.asc_client.gui.runtime import GuiDexStore

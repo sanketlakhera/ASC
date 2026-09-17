@@ -1,4 +1,5 @@
 from .base_locator import BaseLocator
+from ...utils.mutf8 import encode_mutf8
 from collections import defaultdict
 import struct
 import time
@@ -47,15 +48,17 @@ class FieldLocator(BaseLocator):
         type_ids_off, type_ids_size = self.header.types
         right = type_ids_size - 1
         buf = self.buf
-        strings = self.dex.strings
+        get_string_bytes = self.dex.get_string_bytes
+        # type_ids are sorted by descriptor MUTF-8 bytes, so compare bytes
+        target = encode_mutf8(clz)
 
         while left <= right:
             mid = (left + right) >> 1
             desc_idx = _STRUCT_I.unpack_from(buf, type_ids_off + (mid << 2))[0]
-            desc = strings[desc_idx]
-            if desc == clz:
+            desc = get_string_bytes(desc_idx)
+            if desc == target:
                 return mid
-            if desc < clz:
+            if desc < target:
                 left = mid + 1
             else:
                 right = mid - 1

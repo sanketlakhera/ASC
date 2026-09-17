@@ -323,16 +323,19 @@ class DexIndexMapper:
                 for ifs_idx in ifs_list[1:]:
                     self._append_origin_type(ifs_idx)
 
-            # map generic hollow lists from static values and debug info
-            for s_idx in self.hollower.hlw_strs:
+            # map generic hollow lists from static values and debug info.
+            # These are sets; iterate them sorted so the new index tables (and
+            # therefore the rebuilt DEX bytes) depend only on the input, not on
+            # the interpreter's set layout.
+            for s_idx in sorted(self.hollower.hlw_strs):
                 if s_idx != 0xffffffff and s_idx < len(self.origin_strings):
                     self._add_str_restruct(self.origin_strings[s_idx])
-            
-            for t_idx in self.hollower.hlw_types:
+
+            for t_idx in sorted(self.hollower.hlw_types):
                 if t_idx != 0xffffffff:
                     self._append_origin_type(t_idx)
-                    
-            for f_idx in self.hollower.hlw_fields:
+
+            for f_idx in sorted(self.hollower.hlw_fields):
                 if f_idx != 0xffffffff:
                     if f_idx not in self.field_restruct_idx:
                         field_obj = self.dex.fields[f_idx]
@@ -345,7 +348,7 @@ class DexIndexMapper:
                         new_field = [fld_clz_typeidx, fld_type_typeidx, fld_name_stridx]
                         self._add_field_restruct(new_field, field_obj.index)
                         
-            for m_idx in self.hollower.hlw_methods:
+            for m_idx in sorted(self.hollower.hlw_methods):
                 if m_idx != 0xffffffff:
                     if m_idx not in self.method_restruct_idx:
                         origin_proto_idx = self._get_method_proto_idx(m_idx)

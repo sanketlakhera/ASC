@@ -1,7 +1,6 @@
 import struct
-import io
 from .leb128 import read_uleb128_fast
-import bisect
+from .mutf8 import decode_mutf8, encode_mutf8
 
 _STRUCT_I = struct.Struct('<I')
 _STRUCT_H = struct.Struct('<H')
@@ -324,8 +323,13 @@ class DEX:
         self.buf = memoryview(buf)
         self.name = name
         self.header = DEXHeader(self.buf)
+        # The object behind the memoryview (bytes, bytearray or mmap) when its
+        # offsets coincide with ours, for C-speed find(); None for a slice.
+        obj = self.buf.obj
+        self._raw = obj if hasattr(obj, 'find') and len(obj) == len(self.buf) else None
         
         self._strings = None
+        self._string_bytes = {}
         self._types = None
         self._prototypes = None
         self._methods = None
@@ -339,6 +343,36 @@ class DEX:
         self._fields_proxy = self.FieldsProxy(self)
         self._classes_proxy = self.ClassesProxy(self)
 
+    # Raw MUTF-8 payload of a string_data_item, without the NUL terminator.
+    def get_string_bytes(self, str_idx):
+        cached = self._string_bytes.get(str_idx)
+        if cached is not None:
+            return cached
+        payload = self._read_string_bytes(str_idx)
+        self._string_bytes[str_idx] = payload
+        return payload
+
+    def _read_string_bytes(self, str_idx):
+        str_idx_off = self.header.strings[0]
+        string_off = _STRUCT_I.unpack_from(self.buf, str_idx_off + str_idx * 4)[0]
+        utf16_size, c = read_uleb128_fast(self.buf, string_off)
+        data_start = string_off + c
+        raw = self._raw
+        if raw is not None:
+            end = raw.find(b'\x00', data_start)
+            if end < 0:
+                end = len(raw)
+            return bytes(raw[data_start:end])
+        # buf is a slice of a larger object: offsets do not line up with the
+        # underlying buffer, so search a bounded copy instead. The uleb128
+        # prefix counts UTF-16 units and each unit takes at most three bytes,
+        # so the terminator lies within 3 * utf16_size + 1 bytes.
+        chunk = bytes(self.buf[data_start:data_start + utf16_size * 3 + 1])
+        end = chunk.find(b'\x00')
+        if end < 0:
+            end = len(chunk)
+        return chunk[:end]
+
     # lazy parse
     def get_string(self, str_idx):
         if self._strings is None:
@@ -347,13 +381,7 @@ class DEX:
         if str_idx in self._strings:
             return self._strings[str_idx]
 
-        str_idx_off = self.header.strings[0]
-        str_size = self.header.strings[1]
-        string_off = _STRUCT_I.unpack_from(self.buf, str_idx_off + str_idx * 4)[0]
-        utf16_size, c = read_uleb128_fast(self.buf, string_off)
-        data_start = string_off + c
-        end = data_start + utf16_size
-        s = bytes(self.buf[data_start:end]).decode('utf-8', errors='replace')
+        s = decode_mutf8(self.get_string_bytes(str_idx))
         self._strings[str_idx] = s
         return s
 
@@ -505,15 +533,18 @@ class DEX:
         type_ids_size = self.header.types[1]
         type_idx = -1
 
+        # type_ids are sorted by the MUTF-8 bytes of their descriptors (DEX
+        # spec), so the search must compare bytes, not decoded str.
+        target = encode_mutf8(fullname)
         left, right = 0, type_ids_size - 1
         while left <= right:
             mid = (left + right) // 2
             desc_idx = _STRUCT_I.unpack_from(raw_bytes, type_ids_off + mid * 0x4)[0]
-            string = self.get_string(desc_idx)
-            if string == fullname:
+            desc = self.get_string_bytes(desc_idx)
+            if desc == target:
                 type_idx = mid
                 break
-            elif string < fullname:
+            elif desc < target:
                 left = mid + 1
             else:
                 right = mid - 1

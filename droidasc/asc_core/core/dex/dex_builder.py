@@ -2,6 +2,7 @@ import struct
 import array
 import time
 from ...utils.leb128 import write_uleb128, write_sleb128
+from ...utils.mutf8 import encode_mutf8, utf16_len
 from ...utils.dex_parser import rebuild_annotation_item
 from .dex_remapper import DexIndexMapper
 from .dex_constructor import DexHollower
@@ -38,10 +39,9 @@ class DexBuilder:
         string_data_offs = []
         for s in self.im.str_restruct:
             string_data_offs.append(len(self.out))
-            # MUTF-8 length
-            s_bytes = s.encode('utf-8')
-            self.out.extend(write_uleb128(len(s))) # char length, approx len(s) for ascii
-            self.out.extend(s_bytes)
+            # string_data_item: uleb128 utf16_size, MUTF-8 payload, NUL
+            self.out.extend(write_uleb128(utf16_len(s)))
+            self.out.extend(encode_mutf8(s))
             self.out.append(0)
             
         if self.debug: t_string_data = time.perf_counter()
