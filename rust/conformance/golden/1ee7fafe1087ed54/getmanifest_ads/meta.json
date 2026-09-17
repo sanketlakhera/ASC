@@ -1,0 +1,12 @@
+{
+  "query_id": "getmanifest_ads",
+  "command": "getmanifest",
+  "args": [],
+  "corpus_name": "ads_solution",
+  "apk_sha256": "1ee7fafe1087ed5449a1eff865524c62c2516db1a308c3be550e7ea6006188a5",
+  "oracle_git_revision": "e266d73",
+  "git_dirty": false,
+  "diff_sha256": null,
+  "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+  "androguard_version": "4.1.3"
+}

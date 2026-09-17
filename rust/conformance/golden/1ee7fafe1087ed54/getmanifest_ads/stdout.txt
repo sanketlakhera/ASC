@@ -1,0 +1,282 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="4" android:versionName="4.0" android:compileSdkVersion="34" android:compileSdkVersionCodename="14" package="com.ads.solution" platformBuildVersionCode="34" platformBuildVersionName="14">
+  <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="33"/>
+  <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
+  <queries>
+    <package android:name="com.whatsapp"/>
+    <package android:name="com.whatsapp.w4b"/>
+    <package android:name="in.amazon.mShop.android.shopping"/>
+    <package android:name="com.upi.axispay"/>
+    <package android:name="com.axis.mobile"/>
+    <package android:name="com.fisglobal.bandhanupi.app"/>
+    <package android:name="com.bankofbaroda.upi"/>
+    <package android:name="in.org.npci.upiapp"/>
+    <package android:name="com.canarabank.mobility"/>
+    <package android:name="com.citiuat"/>
+    <package android:name="com.dbs.in.digitalbank"/>
+    <package android:name="com.olive.dcb.upi"/>
+    <package android:name="com.finopaytech.bpayfino"/>
+    <package android:name="com.freecharge.android"/>
+    <package android:name="com.google.android.apps.nbu.paisa.user"/>
+    <package android:name="com.snapwork.hdfc"/>
+    <package android:name="com.mgs.hsbcupi"/>
+    <package android:name="com.csam.icici.bank.imobile"/>
+    <package android:name="com.icicibank.pockets"/>
+    <package android:name="com.euronet.iobupi"/>
+    <package android:name="com.mgs.induspsp"/>
+    <package android:name="com.fss.jnkpsp"/>
+    <package android:name="com.jio.myjio"/>
+    <package android:name="com.mycompany.kvb"/>
+    <package android:name="com.kvb.mobilebanking"/>
+    <package android:name="com.lcode.smartz"/>
+    <package android:name="com.msf.kbank.mobile"/>
+    <package android:name="com.upi.federalbank.org.lotza"/>
+    <package android:name="com.infrasofttech.mahaupi"/>
+    <package android:name="com.mipay.in.wallet"/>
+    <package android:name="com.myairtelapp"/>
+    <package android:name="com.mobikwik_new"/>
+    <package android:name="com.onymy.paybee.prod"/>
+    <package android:name="net.one97.paytm"/>
+    <package android:name="com.phonepe.app"/>
+    <package android:name="com.Version1"/>
+    <package android:name="com.samsung.android.spay"/>
+    <package android:name="com.sbi.upi"/>
+    <package android:name="com.SIBMobile"/>
+    <package android:name="com.truecaller"/>
+    <package android:name="com.infrasoft.uboi"/>
+    <package android:name="com.lcode.ucoupi"/>
+    <package android:name="com.YesBank"/>
+    <package android:name="com.dreamplug.androidapp"/>
+    <package android:name="money.bullet"/>
+  </queries>
+  <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+  <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+  <uses-permission android:name="android.permission.WAKE_LOCK"/>
+  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+  <uses-permission android:name="android.permission.READ_CONTACTS"/>
+  <uses-permission android:name="android.permission.WRITE_CONTACTS"/>
+  <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+  <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+  <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+  <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+  <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
+  <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
+  <uses-permission android:name="android.permission.MANAGE_DOCUMENTS"/>
+  <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
+  <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS"/>
+  <uses-permission android:name="android.permission.READ_SMS"/>
+  <uses-permission android:name="android.permission.READ_PHONE_NUMBERS"/>
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+  <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS"/>
+  <uses-permission android:name="android.permission.CALL_PHONE"/>
+  <uses-permission android:name="android.permission.SEND_SMS"/>
+  <uses-permission android:name="android.permission.SET_ALARM"/>
+  <uses-permission android:name="android.permission.READ_CALL_LOG"/>
+  <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+  <uses-permission android:name="android.permission.INTERNET"/>
+  <uses-feature android:name="android.hardware.telephony" android:required="true"/>
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+  <meta-data android:name="android.webkit.WebView.EnableSafeBrowsing" android:value="true"/>
+  <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+  <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/>
+  <uses-permission android:name="com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE"/>
+  <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
+  <uses-permission android:name="android.permission.CAMERA"/>
+  <uses-feature android:name="android.hardware.camera" android:required="false"/>
+  <uses-feature android:name="android.hardware.camera.front" android:required="false"/>
+  <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
+  <uses-feature android:name="android.hardware.camera.flash" android:required="false"/>
+  <uses-feature android:name="android.hardware.screen.landscape" android:required="false"/>
+  <uses-feature android:name="android.hardware.wifi" android:required="false"/>
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+  <permission android:name="com.ads.solution.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" android:protectionLevel="0x00000002"/>
+  <uses-permission android:name="com.ads.solution.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"/>
+  <application android:theme="@7F130009" android:label="@7F120023" android:icon="@7F08006F" android:name="com.ads.solution.ApplicationClass" android:debuggable="true" android:exported="true" android:allowBackup="false" android:supportsRtl="true" android:extractNativeLibs="true" android:usesCleartextTraffic="false" android:networkSecurityConfig="@7F150000" android:appComponentFactory="androidx.core.app.CoreComponentFactory" android:requestLegacyExternalStorage="true">
+    <activity android:name="com.ads.solution.Activitys.NumberActivity" android:exported="false"/>
+    <activity android:name="com.ads.solution.Activitys.QRCodeActivity" android:exported="false"/>
+    <activity android:name="com.ads.solution.Activitys.AttachedMediaActivity2" android:exported="false"/>
+    <activity android:name="com.ads.solution.Activitys.HowTOActivity"/>
+    <activity android:name="com.ads.solution.Activitys.AboutUsActivity"/>
+    <activity android:name="com.ads.solution.Activitys.LoginActivity"/>
+    <activity android:name="com.ads.solution.Activitys.PakcegeActivity"/>
+    <activity android:name="com.ads.solution.Activitys.SheareYourActivity"/>
+    <activity android:name="com.ads.solution.Activitys.OtpActivity"/>
+    <activity android:name="com.ads.solution.Activitys.ContactUsActivity"/>
+    <activity android:name="com.ads.solution.Activitys.TotalSendActivity"/>
+    <activity android:name="com.ads.solution.Activitys.SetMassageActivity"/>
+    <activity android:name="com.ads.solution.Activitys.MyProfileActivity"/>
+    <activity android:name="com.ads.solution.Activitys.BlockedActivity"/>
+    <activity android:name="com.ads.solution.Activitys.ProfileActivity"/>
+    <activity android:name="com.ads.solution.Activitys.ClallIntent"/>
+    <activity android:name="com.ads.solution.Activitys.PayUMoneyActivity"/>
+    <activity android:theme="@7F13000B" android:label="@7F12020B" android:name="com.ads.solution.Activitys.HomeActivity"/>
+    <activity android:name="com.ads.solution.Activitys.SingUpActivity" android:windowSoftInputMode="0x00000002"/>
+    <activity android:name="com.ads.solution.Activitys.MainActivity"/>
+    <activity android:name="com.ads.solution.Activitys.SplashActivity" android:exported="true" android:hardwareAccelerated="false">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.LAUNCHER"/>
+      </intent-filter>
+    </activity>
+    <receiver android:name="com.ads.solution.CallReceiver" android:permission="com.examples.my_permissions.MY_PERMISSION" android:enabled="true" android:exported="true">
+      <intent-filter>
+        <action android:name="android.provider.Telephony.SMS_RECEIVED"/>
+        <action android:name="android.intent.action.PHONE_STATE"/>
+        <action android:name="android.intent.action.ACTION_POWER_CONNECTED"/>
+      </intent-filter>
+    </receiver>
+    <receiver android:name="com.ads.solution.ClearData"/>
+    <receiver android:name="com.ads.solution.SmsReceiver" android:exported="true">
+      <intent-filter>
+        <action android:name="android.intent.action.PHONE_STATE"/>
+        <action android:name="android.intent.action.ACTION_POWER_CONNECTED"/>
+      </intent-filter>
+    </receiver>
+    <service android:label="@7F120024" android:name="com.ads.solution.WhatsappAccessibilityService" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" android:exported="true">
+      <meta-data android:name="android.accessibilityservice" android:resource="@7F150008"/>
+      <intent-filter>
+        <action android:name="android.accessibilityservice.AccessibilityService"/>
+      </intent-filter>
+    </service>
+    <service android:name="com.ads.solution.NotificationClass.GetFCMRegistrationToken" android:exported="false">
+      <intent-filter>
+        <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+      </intent-filter>
+      <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="default_channel_id"/>
+    </service>
+    <service android:name="com.ads.solution.Activitys.MyService"/>
+    <uses-library android:name="org.apache.http.legacy" android:required="false"/>
+    <provider android:name="androidx.core.content.FileProvider" android:exported="false" android:authorities="com.ads.solution.fileprovider" android:grantUriPermissions="true">
+      <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@7F150001"/>
+    </provider>
+    <receiver android:name="com.ads.solution.AlarmReceiver" android:exported="true" android:process=":remote">
+      <intent-filter>
+        <action android:name="com.ads.solution"/>
+      </intent-filter>
+    </receiver>
+    <receiver android:name="com.ads.solution.utility.BootReceiver" android:exported="true">
+      <intent-filter>
+        <action android:name="android.intent.action.BOOT_COMPLETED"/>
+      </intent-filter>
+    </receiver>
+    <receiver android:name="com.ads.solution.ClearTableReceiver" android:exported="true"/>
+    <receiver android:name="com.ads.solution.BootReceiver" android:exported="true">
+      <intent-filter>
+        <action android:name="android.intent.action.BOOT_COMPLETED"/>
+      </intent-filter>
+    </receiver>
+    <meta-data android:name="com.phonepe.android.sdk.Debuggable" android:value="false"/>
+    <meta-data android:name="com.phonepe.android.sdk.isUAT" android:value="false"/>
+    <activity android:theme="@7F1301D6" android:name="com.payu.phonepe.PayUPhonePeActivity"/>
+    <activity android:theme="@7F1301D6" android:name="com.payu.gpay.GPayResponseActivity"/>
+    <meta-data android:name="com.google.android.gms.wallet.api.enabled" android:value="true"/>
+    <activity android:theme="@7F13031D" android:name="com.phonepe.intent.sdk.ui.TransactionActivity" android:configChanges="0x00000080" android:windowSoftInputMode="0x00000022"/>
+    <service android:name="com.phonepe.intent.sdk.ui.PreCacheService" android:exported="false"/>
+    <activity android:theme="@7F130125" android:name="com.phonepe.intent.sdk.ui.UpiAppSelectionActivity"/>
+    <activity android:theme="@7F13031C" android:name="com.phonepe.intent.sdk.ui.UpiAppsSelectionDialogActivity"/>
+    <activity android:theme="@7F13031C" android:name="com.phonepe.intent.sdk.ui.OpenIntentTransactionActivity"/>
+    <activity android:name="com.payu.custombrowser.CBActivity" android:screenOrientation="1" android:windowSoftInputMode="0x00000003"/>
+    <service android:name="com.payu.custombrowser.services.SnoozeService"/>
+    <activity android:name="com.payu.ui.view.activities.CheckoutActivity" android:screenOrientation="1"/>
+    <meta-data android:name="preloaded_fonts" android:resource="@7F030007"/>
+    <activity android:theme="@7F1301D6" android:name="com.payu.upisdk.upiintent.PaymentResponseUpiSdkActivity" android:windowSoftInputMode="0x00000003"/>
+    <activity android:theme="@android:01030010" android:name="com.google.android.gms.auth.api.signin.internal.SignInHubActivity" android:exported="false" android:excludeFromRecents="true"/>
+    <service android:name="com.google.android.gms.auth.api.signin.RevocationBoundService" android:permission="com.google.android.gms.auth.api.signin.permission.REVOCATION_NOTIFICATION" android:exported="true" android:visibleToInstantApps="true"/>
+    <receiver android:name="com.google.firebase.iid.FirebaseInstanceIdReceiver" android:permission="com.google.android.c2dm.permission.SEND" android:exported="true">
+      <intent-filter>
+        <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
+      </intent-filter>
+    </receiver>
+    <service android:name="com.google.firebase.messaging.FirebaseMessagingService" android:exported="false" android:directBootAware="true">
+      <intent-filter android:priority="-500">
+        <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+      </intent-filter>
+    </service>
+    <service android:name="com.google.firebase.components.ComponentDiscoveryService" android:exported="false" android:directBootAware="true">
+      <meta-data android:name="com.google.firebase.components:com.google.firebase.messaging.FirebaseMessagingRegistrar" android:value="com.google.firebase.components.ComponentRegistrar"/>
+      <meta-data android:name="com.google.firebase.components:com.google.firebase.analytics.connector.internal.AnalyticsConnectorRegistrar" android:value="com.google.firebase.components.ComponentRegistrar"/>
+      <meta-data android:name="com.google.firebase.components:com.google.firebase.datatransport.TransportRegistrar" android:value="com.google.firebase.components.ComponentRegistrar"/>
+      <meta-data android:name="com.google.firebase.components:com.google.firebase.installations.FirebaseInstallationsRegistrar" android:value="com.google.firebase.components.ComponentRegistrar"/>
+    </service>
+    <activity android:theme="@android:01030010" android:name="com.google.android.gms.common.api.GoogleApiActivity" android:exported="false"/>
+    <receiver android:name="com.google.android.gms.measurement.AppMeasurementReceiver" android:enabled="true" android:exported="false"/>
+    <service android:name="com.google.android.gms.measurement.AppMeasurementService" android:enabled="true" android:exported="false"/>
+    <service android:name="com.google.android.gms.measurement.AppMeasurementJobService" android:permission="android.permission.BIND_JOB_SERVICE" android:enabled="true" android:exported="false"/>
+    <provider android:name="com.google.firebase.provider.FirebaseInitProvider" android:exported="false" android:authorities="com.ads.solution.firebaseinitprovider" android:initOrder="100" android:directBootAware="true"/>
+    <meta-data android:name="com.google.android.gms.version" android:value="@7F0B000F"/>
+    <activity android:theme="@7F130322" android:name="com.journeyapps.barcodescanner.CaptureActivity" android:clearTaskOnLaunch="true" android:stateNotNeeded="true" android:screenOrientation="6" android:windowSoftInputMode="0x00000003"/>
+    <provider android:name="androidx.startup.InitializationProvider" android:exported="false" android:authorities="com.ads.solution.androidx-startup">
+      <meta-data android:name="androidx.work.WorkManagerInitializer" android:value="androidx.startup"/>
+      <meta-data android:name="androidx.lifecycle.ProcessLifecycleInitializer" android:value="androidx.startup"/>
+      <meta-data android:name="com.payu.crashlogger.CrashProviderInitializer" android:value="androidx.startup"/>
+      <meta-data android:name="androidx.profileinstaller.ProfileInstallerInitializer" android:value="androidx.startup"/>
+    </provider>
+    <service android:name="androidx.work.impl.background.systemalarm.SystemAlarmService" android:enabled="@7F050004" android:exported="false" android:directBootAware="false"/>
+    <service android:name="androidx.work.impl.background.systemjob.SystemJobService" android:permission="android.permission.BIND_JOB_SERVICE" android:enabled="@7F050006" android:exported="true" android:directBootAware="false"/>
+    <service android:name="androidx.work.impl.foreground.SystemForegroundService" android:enabled="@7F050005" android:exported="false" android:directBootAware="false"/>
+    <receiver android:name="androidx.work.impl.utils.ForceStopRunnable$BroadcastReceiver" android:enabled="true" android:exported="false" android:directBootAware="false"/>
+    <receiver android:name="androidx.work.impl.background.systemalarm.ConstraintProxy$BatteryChargingProxy" android:enabled="false" android:exported="false" android:directBootAware="false">
+      <intent-filter>
+        <action android:name="android.intent.action.ACTION_POWER_CONNECTED"/>
+        <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED"/>
+      </intent-filter>
+    </receiver>
+    <receiver android:name="androidx.work.impl.background.systemalarm.ConstraintProxy$BatteryNotLowProxy" android:enabled="false" android:exported="false" android:directBootAware="false">
+      <intent-filter>
+        <action android:name="android.intent.action.BATTERY_OKAY"/>
+        <action android:name="android.intent.action.BATTERY_LOW"/>
+      </intent-filter>
+    </receiver>
+    <receiver android:name="androidx.work.impl.background.systemalarm.ConstraintProxy$StorageNotLowProxy" android:enabled="false" android:exported="false" android:directBootAware="false">
+      <intent-filter>
+        <action android:name="android.intent.action.DEVICE_STORAGE_LOW"/>
+        <action android:name="android.intent.action.DEVICE_STORAGE_OK"/>
+      </intent-filter>
+    </receiver>
+    <receiver android:name="androidx.work.impl.background.systemalarm.ConstraintProxy$NetworkStateProxy" android:enabled="false" android:exported="false" android:directBootAware="false">
+      <intent-filter>
+        <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
+      </intent-filter>
+    </receiver>
+    <receiver android:name="androidx.work.impl.background.systemalarm.RescheduleReceiver" android:enabled="false" android:exported="false" android:directBootAware="false">
+      <intent-filter>
+        <action android:name="android.intent.action.BOOT_COMPLETED"/>
+        <action android:name="android.intent.action.TIME_SET"/>
+        <action android:name="android.intent.action.TIMEZONE_CHANGED"/>
+      </intent-filter>
+    </receiver>
+    <receiver android:name="androidx.work.impl.background.systemalarm.ConstraintProxyUpdateReceiver" android:enabled="@7F050004" android:exported="false" android:directBootAware="false">
+      <intent-filter>
+        <action android:name="androidx.work.impl.background.systemalarm.UpdateProxies"/>
+      </intent-filter>
+    </receiver>
+    <receiver android:name="androidx.work.impl.diagnostics.DiagnosticsReceiver" android:permission="android.permission.DUMP" android:enabled="true" android:exported="true" android:directBootAware="false">
+      <intent-filter>
+        <action android:name="androidx.work.diagnostics.REQUEST_DIAGNOSTICS"/>
+      </intent-filter>
+    </receiver>
+    <service android:name="androidx.room.MultiInstanceInvalidationService" android:exported="false" android:directBootAware="true"/>
+    <service android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery" android:exported="false">
+      <meta-data android:name="backend:com.google.android.datatransport.cct.CctBackendFactory" android:value="cct"/>
+    </service>
+    <service android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService" android:permission="android.permission.BIND_JOB_SERVICE" android:exported="false"/>
+    <receiver android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver" android:exported="false"/>
+    <receiver android:name="androidx.profileinstaller.ProfileInstallReceiver" android:permission="android.permission.DUMP" android:enabled="true" android:exported="true" android:directBootAware="false">
+      <intent-filter>
+        <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE"/>
+      </intent-filter>
+      <intent-filter>
+        <action android:name="androidx.profileinstaller.action.SKIP_FILE"/>
+      </intent-filter>
+      <intent-filter>
+        <action android:name="androidx.profileinstaller.action.SAVE_PROFILE"/>
+      </intent-filter>
+      <intent-filter>
+        <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION"/>
+      </intent-filter>
+    </receiver>
+  </application>
+</manifest>
+
