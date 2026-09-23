@@ -180,6 +180,10 @@ def build_corpus(corpus_dir: Path) -> dict:
             _write_entry(zf, "classes.dex", raw_dex[:trunc], zipfile.ZIP_STORED)
         corpus[cname] = apk_trunc
 
+    # Fuzz findings are committed as-is (not generated): one per parity bug class.
+    for apk in sorted(corpus_dir.glob("fixture_fuzz_*.apk")):
+        corpus[apk.stem.removeprefix("fixture_")] = apk
+
     return corpus
 
 
