@@ -1,3 +1,5 @@
+#![warn(clippy::arithmetic_side_effects)]
+
 pub mod container;
 pub mod descriptor;
 pub mod header;

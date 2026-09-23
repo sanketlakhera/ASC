@@ -1,3 +1,4 @@
+use crate::bytes::{record, u16_at};
 use crate::error::AscError;
 use crate::zip::{DexEntry, LH_SIG};
 use flate2::{Decompress, FlushDecompress, Status};
@@ -21,25 +22,12 @@ pub fn inflate_entry(
         return Err(AscError::BadLocalHeaderSignature);
     }
 
-    let name_len = u16::from_le_bytes(
-        data.get(lh_off + 26..lh_off + 28)
-            .ok_or(AscError::BadLocalHeaderSignature)?
-            .try_into()
-            .unwrap(),
-    ) as usize;
-    let extra_len = u16::from_le_bytes(
-        data.get(lh_off + 28..lh_off + 30)
-            .ok_or(AscError::BadLocalHeaderSignature)?
-            .try_into()
-            .unwrap(),
-    ) as usize;
+    let name_len = u16_at(data, lh_off + 26).ok_or(AscError::BadLocalHeaderSignature)? as usize;
+    let extra_len = u16_at(data, lh_off + 28).ok_or(AscError::BadLocalHeaderSignature)? as usize;
 
     let data_off = lh_off + 30 + name_len + extra_len;
     let comp_size = entry.comp_size as usize;
-    if data_off + comp_size > data.len() {
-        return Err(AscError::BadCompressedDataRange);
-    }
-    let comp_slice = &data[data_off..data_off + comp_size];
+    let comp_slice = record(data, data_off, comp_size).ok_or(AscError::BadCompressedDataRange)?;
 
     let decompressed = match entry.method {
         0 => {
@@ -82,15 +70,12 @@ fn inflate_deflate(
     });
     let mut temp_buf = [0u8; 64 * 1024];
 
-    let mut pos = 0;
-    let total = comp_slice.len();
+    let corrupt = || AscError::CorruptDeflateStream(entry_name.to_string());
 
-    while pos < total {
+    for mut chunk in comp_slice.chunks(DEFLATE_CHUNK) {
         if cancel.is_some_and(|c| c.load(Ordering::Relaxed)) {
             return Ok(None);
         }
-        let chunk_end = std::cmp::min(pos + DEFLATE_CHUNK, total);
-        let mut chunk = &comp_slice[pos..chunk_end];
 
         while !chunk.is_empty() {
             let before_in = decompressor.total_in();
@@ -103,8 +88,9 @@ fn inflate_deflate(
             let consumed = (decompressor.total_in() - before_in) as usize;
             let produced = (decompressor.total_out() - before_out) as usize;
 
-            chunk = &chunk[consumed..];
-            out.extend_from_slice(&temp_buf[..produced]);
+            // flate2 never reports more than it was given, so these cannot fail.
+            chunk = chunk.get(consumed..).ok_or_else(corrupt)?;
+            out.extend_from_slice(temp_buf.get(..produced).ok_or_else(corrupt)?);
 
             if status == Status::StreamEnd {
                 if cancel.is_some_and(|c| c.load(Ordering::Relaxed)) {
@@ -117,8 +103,6 @@ fn inflate_deflate(
                 return Err(AscError::CorruptDeflateStream(entry_name.to_string()));
             }
         }
-
-        pos = chunk_end;
     }
 
     let mut finished = false;
@@ -128,7 +112,7 @@ fn inflate_deflate(
             .decompress(&[], &mut temp_buf, FlushDecompress::Finish)
             .map_err(|_| AscError::CorruptDeflateStream(entry_name.to_string()))?;
         let produced = (decompressor.total_out() - before_out) as usize;
-        out.extend_from_slice(&temp_buf[..produced]);
+        out.extend_from_slice(temp_buf.get(..produced).ok_or_else(corrupt)?);
 
         if status == Status::StreamEnd {
             finished = true;

@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used, clippy::indexing_slicing)]
+
 use asc_core::leb128::{read_sleb128, read_uleb128, uleb128_len, write_sleb128, write_uleb128};
 use proptest::prelude::*;
 use serde::Deserialize;

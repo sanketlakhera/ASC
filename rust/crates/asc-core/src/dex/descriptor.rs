@@ -28,10 +28,7 @@ pub struct TypeInfo {
 
 pub fn parse_descriptor(desc: &DexStr) -> TypeInfo {
     let units = desc.as_slice();
-    let mut dim = 0;
-    while dim < units.len() && units[dim] == b'[' as u16 {
-        dim += 1;
-    }
+    let dim = units.iter().take_while(|&&u| u == u16::from(b'[')).count();
 
     if dim > 0 {
         return TypeInfo {
@@ -43,8 +40,8 @@ pub fn parse_descriptor(desc: &DexStr) -> TypeInfo {
         };
     }
 
-    if units.len() == 1 {
-        let prim = match units[0] {
+    if let [unit] = units {
+        let prim = match unit {
             0x56 => Some(0), // 'V'
             0x5A => Some(1), // 'Z'
             0x42 => Some(2), // 'B'

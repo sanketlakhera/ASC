@@ -1,3 +1,5 @@
+use crate::bytes::u32_at;
+
 pub const DEX_HEADER_MIN_SIZE: usize = 0x70;
 pub const DEX041_MAGIC: &[u8; 8] = b"dex\n041\x00";
 
@@ -14,16 +16,21 @@ pub fn dex041_logical_offsets(data: &[u8]) -> Vec<usize> {
     }
     let mut offsets = Vec::new();
     let mut off = 0;
-    let data_len = data.len();
 
-    while off + DEX_HEADER_MIN_SIZE <= data_len && data.get(off..off + 8) == Some(DEX041_MAGIC) {
-        let file_size =
-            u32::from_le_bytes(data[off + 0x20..off + 0x24].try_into().unwrap()) as usize;
-        if file_size < DEX_HEADER_MIN_SIZE || off + file_size > data_len {
+    while let Some(rest) = data
+        .get(off..)
+        .filter(|r| r.len() >= DEX_HEADER_MIN_SIZE && r.starts_with(DEX041_MAGIC))
+    {
+        let Some(file_size) = u32_at(rest, 0x20) else {
+            break;
+        };
+        let file_size = file_size as usize;
+        if file_size < DEX_HEADER_MIN_SIZE || file_size > rest.len() {
             break;
         }
         offsets.push(off);
-        off += file_size;
+        // Bounded by `data.len()` by the check above.
+        off = off.saturating_add(file_size);
     }
 
     if offsets.is_empty() { vec![0] } else { offsets }
@@ -35,23 +42,20 @@ pub fn normalize_dex041_logical(data: &[u8], header_off: usize) -> Vec<u8> {
     if header_off == 0 {
         return data.to_vec();
     }
-    let header_size = if header_off + 0x28 <= data.len() {
-        let sz = u32::from_le_bytes(
-            data[header_off + 0x24..header_off + 0x28]
-                .try_into()
-                .unwrap(),
-        ) as usize;
-        if sz < DEX_HEADER_MIN_SIZE || header_off + sz > data.len() {
-            DEX_HEADER_MIN_SIZE
-        } else {
-            sz
+    let logical = data.get(header_off..).unwrap_or_default();
+    let header_size = match u32_at(logical, 0x24) {
+        Some(sz) if sz as usize >= DEX_HEADER_MIN_SIZE && sz as usize <= logical.len() => {
+            sz as usize
         }
-    } else {
-        DEX_HEADER_MIN_SIZE
+        _ => DEX_HEADER_MIN_SIZE,
     };
 
     let mut out = data.to_vec();
-    out[..header_size].copy_from_slice(&data[header_off..header_off + header_size]);
+    // `dex041_logical_offsets` only yields offsets with a full header behind them;
+    // for any other offset the buffer is returned unchanged.
+    if let (Some(dst), Some(src)) = (out.get_mut(..header_size), logical.get(..header_size)) {
+        dst.copy_from_slice(src);
+    }
     out
 }
 
@@ -69,9 +73,9 @@ pub fn iter_logical_dex_buffers<'a>(
 
     offsets
         .into_iter()
-        .enumerate()
-        .map(|(idx, header_off)| {
-            let logical_name = format!("{name}!classes{}.dex", idx + 1);
+        .zip(1..)
+        .map(|(header_off, n)| {
+            let logical_name = format!("{name}!classes{n}.dex");
             let normalized = normalize_dex041_logical(data, header_off);
             (logical_name, std::borrow::Cow::Owned(normalized))
         })

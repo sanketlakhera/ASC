@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used, clippy::indexing_slicing)]
+
 use regex::Regex;
 use std::env;
 use std::fs;

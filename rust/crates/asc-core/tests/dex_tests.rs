@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used, clippy::indexing_slicing)]
+
 use asc_core::dex::{Dex, TypeKind, dex041_logical_offsets, is_dex041_container, parse_descriptor};
 use asc_core::error::AscError;
 use asc_core::inflate::inflate_entry;

@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used, clippy::indexing_slicing)]
+
 use asc_core::error::AscError;
 use asc_core::zip::{decode_utf8_ignore, find_eocd, parse_cd_dex_entries};
 use serde::Deserialize;

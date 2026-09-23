@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used, clippy::indexing_slicing)]
+
 use asc_core::opcode::OPCODES;
 use std::fs;
 

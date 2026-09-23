@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used, clippy::indexing_slicing)]
+
 use asc_core::mutf8::{decode_mutf8, encode_mutf8, utf16_len};
 use proptest::prelude::*;
 use serde::Deserialize;

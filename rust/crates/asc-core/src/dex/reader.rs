@@ -1,3 +1,4 @@
+use crate::bytes::{record, u16_at, u32_at, until_nul};
 use crate::dex::descriptor::{TypeInfo, parse_descriptor};
 use crate::dex::header::Header;
 use crate::error::AscError;
@@ -80,29 +81,18 @@ impl<'a> Dex<'a> {
         let entry_off = off
             .checked_add(str_idx.checked_mul(4).ok_or(AscError::BadStringIdsRange)?)
             .ok_or(AscError::BadStringIdsRange)?;
-        let string_off_bytes = self
-            .buf
-            .get(entry_off..entry_off + 4)
-            .ok_or(AscError::BadStringIdsRange)?;
-        let string_off = u32::from_le_bytes(string_off_bytes.try_into().unwrap()) as usize;
+        let string_off = u32_at(self.buf, entry_off).ok_or(AscError::BadStringIdsRange)? as usize;
 
         if string_off >= self.buf.len() {
             return Err(AscError::BadStringDataOffset);
         }
 
         let (_utf16_len, uleb_sz) = read_uleb128(self.buf, string_off)?;
-        let data_start = string_off + uleb_sz;
-        if data_start > self.buf.len() {
-            return Err(AscError::UnterminatedStringDataItem);
-        }
-
-        let remainder = &self.buf[data_start..];
-        let null_pos = remainder
-            .iter()
-            .position(|&b| b == 0)
-            .ok_or(AscError::UnterminatedStringDataItem)?;
-
-        Ok(&self.buf[data_start..data_start + null_pos])
+        string_off
+            .checked_add(uleb_sz)
+            .and_then(|data_start| self.buf.get(data_start..))
+            .and_then(until_nul)
+            .ok_or(AscError::UnterminatedStringDataItem)
     }
 
     /// Decodes string at `str_idx` into a `DexStr`.
@@ -117,12 +107,12 @@ impl<'a> Dex<'a> {
         if str_idx >= count {
             return Err(AscError::BadStringIdsRange);
         }
-        let entry_off = off + str_idx * 4;
-        let string_off_bytes = self
-            .buf
-            .get(entry_off..entry_off + 4)
-            .ok_or(AscError::BadStringIdsRange)?;
-        Ok(u32::from_le_bytes(string_off_bytes.try_into().unwrap()) as usize)
+        str_idx
+            .checked_mul(4)
+            .and_then(|rel| rel.checked_add(off))
+            .and_then(|entry_off| u32_at(self.buf, entry_off))
+            .map(|string_off| string_off as usize)
+            .ok_or(AscError::BadStringIdsRange)
     }
 
     /// Returns parsed `TypeInfo` for `type_idx`.
@@ -134,11 +124,7 @@ impl<'a> Dex<'a> {
         let entry_off = off
             .checked_add(type_idx.checked_mul(4).ok_or(AscError::BadTypeIdsRange)?)
             .ok_or(AscError::BadTypeIdsRange)?;
-        let str_idx_bytes = self
-            .buf
-            .get(entry_off..entry_off + 4)
-            .ok_or(AscError::BadTypeIdsRange)?;
-        let str_idx = u32::from_le_bytes(str_idx_bytes.try_into().unwrap()) as usize;
+        let str_idx = u32_at(self.buf, entry_off).ok_or(AscError::BadTypeIdsRange)? as usize;
         let desc = self.get_string(str_idx)?;
         let info = parse_descriptor(&desc);
         Ok((str_idx, info))
@@ -150,32 +136,27 @@ impl<'a> Dex<'a> {
         if proto_idx >= count {
             return Err(AscError::BadProtoIdsRange);
         }
-        let entry_off = off + proto_idx * 12;
-        let bytes = self
-            .buf
-            .get(entry_off..entry_off + 12)
+        let entry_off = proto_idx
+            .checked_mul(12)
+            .and_then(|rel| rel.checked_add(off))
             .ok_or(AscError::BadProtoIdsRange)?;
+        let bytes = record(self.buf, entry_off, 12).ok_or(AscError::BadProtoIdsRange)?;
+        let field = |o| u32_at(bytes, o).ok_or(AscError::BadProtoIdsRange);
 
-        let shorty_idx = u32::from_le_bytes(bytes[0..4].try_into().unwrap());
-        let return_type_idx = u32::from_le_bytes(bytes[4..8].try_into().unwrap());
-        let parameters_off = u32::from_le_bytes(bytes[8..12].try_into().unwrap());
+        let shorty_idx = field(0)?;
+        let return_type_idx = field(4)?;
+        let parameters_off = field(8)?;
 
         let mut param_type_idxs = Vec::new();
         if parameters_off != 0 {
             let p_off = parameters_off as usize;
-            let sz_bytes = self
-                .buf
-                .get(p_off..p_off + 4)
-                .ok_or(AscError::BadTypeListOffset)?;
-            let size = u32::from_le_bytes(sz_bytes.try_into().unwrap()) as usize;
-            let mut curr = p_off + 4;
+            let size = u32_at(self.buf, p_off).ok_or(AscError::BadTypeListOffset)? as usize;
+            // The u32 read above guarantees `p_off + 4 <= len`.
+            let list = self.buf.get(p_off.saturating_add(4)..).unwrap_or_default();
+            let mut items = list.as_chunks::<2>().0.iter();
             for _ in 0..size {
-                let type_bytes = self
-                    .buf
-                    .get(curr..curr + 2)
-                    .ok_or(AscError::BadTypeListOffset)?;
-                param_type_idxs.push(u16::from_le_bytes(type_bytes.try_into().unwrap()));
-                curr += 2;
+                let item = items.next().ok_or(AscError::BadTypeListOffset)?;
+                param_type_idxs.push(u16::from_le_bytes(*item));
             }
         }
 
@@ -193,15 +174,11 @@ impl<'a> Dex<'a> {
         if field_idx >= count {
             return Err(AscError::BadFieldIdsRange);
         }
-        let entry_off = off + field_idx * 8;
-        let bytes = self
-            .buf
-            .get(entry_off..entry_off + 8)
+        let (class_idx, type_idx, name_idx) = field_idx
+            .checked_mul(8)
+            .and_then(|rel| rel.checked_add(off))
+            .and_then(|entry_off| id_entry_at(self.buf, entry_off))
             .ok_or(AscError::BadFieldIdsRange)?;
-
-        let class_idx = u16::from_le_bytes(bytes[0..2].try_into().unwrap());
-        let type_idx = u16::from_le_bytes(bytes[2..4].try_into().unwrap());
-        let name_idx = u32::from_le_bytes(bytes[4..8].try_into().unwrap());
 
         Ok(FieldInfo {
             index: field_idx as u32,
@@ -219,15 +196,11 @@ impl<'a> Dex<'a> {
         if method_idx >= count {
             return Err(AscError::BadMethodIdsRange);
         }
-        let entry_off = off + method_idx * 8;
-        let bytes = self
-            .buf
-            .get(entry_off..entry_off + 8)
+        let (class_idx, proto_idx, name_idx) = method_idx
+            .checked_mul(8)
+            .and_then(|rel| rel.checked_add(off))
+            .and_then(|entry_off| id_entry_at(self.buf, entry_off))
             .ok_or(AscError::BadMethodIdsRange)?;
-
-        let class_idx = u16::from_le_bytes(bytes[0..2].try_into().unwrap());
-        let proto_idx = u16::from_le_bytes(bytes[2..4].try_into().unwrap());
-        let name_idx = u32::from_le_bytes(bytes[4..8].try_into().unwrap());
 
         Ok(MethodInfo {
             index: method_idx as u64,
@@ -285,28 +258,31 @@ impl<'a> Dex<'a> {
         if class_def_idx >= count {
             return Err(AscError::BadClassDefsRange);
         }
-        let entry_off = off + class_def_idx * 32;
-        let bytes = self
-            .buf
-            .get(entry_off..entry_off + 32)
+        let entry_off = class_def_idx
+            .checked_mul(32)
+            .and_then(|rel| rel.checked_add(off))
             .ok_or(AscError::BadClassDefsRange)?;
+        let bytes = record(self.buf, entry_off, 32).ok_or(AscError::BadClassDefsRange)?;
+        let field = |o| u32_at(bytes, o).ok_or(AscError::BadClassDefsRange);
 
-        class.class_idx = u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]);
+        class.class_idx = field(0)?;
         class.class_def_off = entry_off as u32;
-        class.class_data_off = u32::from_le_bytes([bytes[24], bytes[25], bytes[26], bytes[27]]);
+        class.class_data_off = field(24)?;
         if class.class_data_off == 0 {
             return Ok(());
         }
 
+        // Reads the next uleb128 of class_data and steps past it.
         let mut p = class.class_data_off as usize;
-        let (static_fields_size, n) = read_uleb128(self.buf, p)?;
-        p += n;
-        let (instance_fields_size, n) = read_uleb128(self.buf, p)?;
-        p += n;
-        let (direct_methods_size, n) = read_uleb128(self.buf, p)?;
-        p += n;
-        let (virtual_methods_size, n) = read_uleb128(self.buf, p)?;
-        p += n;
+        let mut next_uleb = || -> Result<u64, AscError> {
+            let (value, n) = read_uleb128(self.buf, p)?;
+            p = p.checked_add(n).ok_or(AscError::UnterminatedUleb128)?;
+            Ok(value)
+        };
+        let static_fields_size = next_uleb()?;
+        let instance_fields_size = next_uleb()?;
+        let direct_methods_size = next_uleb()?;
+        let virtual_methods_size = next_uleb()?;
 
         // Python accumulates indices as unbounded ints and resolves each entry as
         // soon as it is read (tinydex DexField / DexMethod), so the running index
@@ -317,11 +293,9 @@ impl<'a> Dex<'a> {
         for (size, is_static) in [(static_fields_size, true), (instance_fields_size, false)] {
             let mut f_idx = 0u64;
             for i in 0..size {
-                let (diff, n) = read_uleb128(self.buf, p)?;
-                p += n;
+                let diff = next_uleb()?;
                 f_idx = f_idx.saturating_add(diff);
-                let (flags, n) = read_uleb128(self.buf, p)?;
-                p += n;
+                let flags = next_uleb()?;
                 if (i > 0 && diff == 0) || (!is_static && static_idxs.contains(&f_idx)) {
                     return Err(AscError::BadClassData);
                 }
@@ -341,13 +315,10 @@ impl<'a> Dex<'a> {
         for (size, is_direct) in [(direct_methods_size, true), (virtual_methods_size, false)] {
             let mut m_idx = 0u64;
             for i in 0..size {
-                let (diff, n) = read_uleb128(self.buf, p)?;
-                p += n;
+                let diff = next_uleb()?;
                 m_idx = m_idx.saturating_add(diff);
-                let (flags, n) = read_uleb128(self.buf, p)?;
-                p += n;
-                let (code_off, n) = read_uleb128(self.buf, p)?;
-                p += n;
+                let flags = next_uleb()?;
+                let code_off = next_uleb()?;
                 if (i > 0 && diff == 0) || (!is_direct && direct_idxs.contains(&m_idx)) {
                     return Err(AscError::BadClassData);
                 }
@@ -389,13 +360,8 @@ impl<'a> Dex<'a> {
         if !self.id_entry_in_buf(table_off, idx) {
             return None;
         }
-        let off = table_off + (idx as usize) * 8;
-        let b = self.buf.get(off..off + 8)?;
-        Some((
-            u16::from_le_bytes([b[0], b[1]]),
-            u16::from_le_bytes([b[2], b[3]]),
-            u32::from_le_bytes([b[4], b[5], b[6], b[7]]),
-        ))
+        let off = (idx as usize).checked_mul(8)?.checked_add(table_off)?;
+        id_entry_at(self.buf, off)
     }
 
     /// Reads code_item header and instruction bytes at `code_off`.
@@ -405,20 +371,24 @@ impl<'a> Dex<'a> {
             .get(code_off..code_off.saturating_add(16))
             .ok_or(AscError::BadCodeItemOffset)?;
 
-        let registers_size = u16::from_le_bytes(bytes[0..2].try_into().unwrap());
-        let ins_size = u16::from_le_bytes(bytes[2..4].try_into().unwrap());
-        let outs_size = u16::from_le_bytes(bytes[4..6].try_into().unwrap());
-        let tries_size = u16::from_le_bytes(bytes[6..8].try_into().unwrap());
-        let debug_info_off = u32::from_le_bytes(bytes[8..12].try_into().unwrap());
-        let insns_size = u32::from_le_bytes(bytes[12..16].try_into().unwrap());
+        let half = |o| u16_at(bytes, o).ok_or(AscError::BadCodeItemOffset);
+        let word = |o| u32_at(bytes, o).ok_or(AscError::BadCodeItemOffset);
+
+        let registers_size = half(0)?;
+        let ins_size = half(2)?;
+        let outs_size = half(4)?;
+        let tries_size = half(6)?;
+        let debug_info_off = word(8)?;
+        let insns_size = word(12)?;
 
         // Python slices `buf[off + 16 : off + 16 + insns_size * 2]`, which clamps
         // silently at the buffer end; only the 16-byte header is a contract error.
-        let insns_start = code_off + 16;
-        let insns_end = insns_start
-            .saturating_add(insns_size as usize * 2)
-            .min(self.buf.len());
-        let insns_bytes = self.buf.get(insns_start..insns_end).unwrap_or(&[]);
+        let after_header = self
+            .buf
+            .get(code_off.saturating_add(16)..)
+            .unwrap_or_default();
+        let insns_len = (insns_size as usize).saturating_mul(2);
+        let insns_bytes = after_header.get(..insns_len).unwrap_or(after_header);
 
         Ok(CodeItemInfo {
             registers_size,
@@ -486,14 +456,13 @@ impl<'a> Dex<'a> {
         // Inclusive bounds and `(left + right) / 2` exactly as Python, so the same
         // strings are probed and the same error fires first.
         let mut type_idx = None;
-        let (mut left, mut right) = (0i64, type_count as i64 - 1);
+        let (mut left, mut right) = (0i64, (type_count as i64).saturating_sub(1));
         while left <= right {
-            let mid = ((left + right) / 2) as usize;
-            let entry_off = type_off + mid * 4;
-            let desc_idx = self
-                .buf
-                .get(entry_off..entry_off + 4)
-                .map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+            let mid = left.midpoint(right) as usize;
+            let desc_idx = mid
+                .checked_mul(4)
+                .and_then(|rel| rel.checked_add(type_off))
+                .and_then(|entry_off| u32_at(self.buf, entry_off))
                 .ok_or(AscError::BadTypeIdsRange)?;
             match self
                 .get_string_bytes(desc_idx as usize)?
@@ -503,8 +472,8 @@ impl<'a> Dex<'a> {
                     type_idx = Some(mid as u32);
                     break;
                 }
-                std::cmp::Ordering::Less => left = mid as i64 + 1,
-                std::cmp::Ordering::Greater => right = mid as i64 - 1,
+                std::cmp::Ordering::Less => left = (mid as i64).saturating_add(1),
+                std::cmp::Ordering::Greater => right = (mid as i64).saturating_sub(1),
             }
         }
         let Some(type_idx) = type_idx else {
@@ -512,12 +481,12 @@ impl<'a> Dex<'a> {
         };
 
         for idx in 0..class_count {
-            let def_off = class_off + idx * 32;
-            if let Some(bytes) = self.buf.get(def_off..def_off + 4) {
-                let cls_type_idx = u32::from_le_bytes(bytes.try_into().unwrap());
-                if cls_type_idx == type_idx {
-                    return Ok(Some(idx));
-                }
+            let cls_type_idx = idx
+                .checked_mul(32)
+                .and_then(|rel| rel.checked_add(class_off))
+                .and_then(|def_off| u32_at(self.buf, def_off));
+            if cls_type_idx == Some(type_idx) {
+                return Ok(Some(idx));
             }
         }
 
@@ -539,28 +508,20 @@ pub fn read_string_data_bytes(buf: &[u8], str_off: usize) -> Result<&[u8], AscEr
     // apk_handler skips the prefix with the unbounded `_skip_uleb128`, not the
     // five-byte `read_uleb128_fast` tinydex uses.
     let data_start = skip_uleb128(buf, str_off)?;
-    if data_start > buf.len() {
-        return Err(AscError::UnterminatedStringDataItem);
-    }
-    let remainder = &buf[data_start..];
-    let null_pos = remainder
-        .iter()
-        .position(|&b| b == 0)
-        .ok_or(AscError::UnterminatedStringDataItem)?;
-    Ok(&remainder[..null_pos])
+    buf.get(data_start..)
+        .and_then(until_nul)
+        .ok_or(AscError::UnterminatedStringDataItem)
 }
 
 /// Binary searches `type_ids` in a raw DEX buffer for `target_bytes`.
 /// Matches Python `apk_handler._find_type_idx`.
 pub fn find_type_idx_raw(buf: &[u8], target_bytes: &[u8]) -> Result<Option<usize>, AscError> {
-    if buf.len() < 0x70 || buf.get(..3) != Some(b"dex") {
+    // `Header::parse` fails exactly when the buffer is short or lacks the magic.
+    let Ok(header) = Header::parse(buf) else {
         return Ok(None);
-    }
-
-    let string_count = u32::from_le_bytes(buf[0x38..0x3c].try_into().unwrap()) as usize;
-    let string_off = u32::from_le_bytes(buf[0x3c..0x40].try_into().unwrap()) as usize;
-    let type_count = u32::from_le_bytes(buf[0x40..0x44].try_into().unwrap()) as usize;
-    let type_off = u32::from_le_bytes(buf[0x44..0x48].try_into().unwrap()) as usize;
+    };
+    let (string_off, string_count) = header.strings;
+    let (type_off, type_count) = header.types;
 
     if string_count == 0 || type_count == 0 {
         return Ok(None);
@@ -585,22 +546,23 @@ pub fn find_type_idx_raw(buf: &[u8], target_bytes: &[u8]) -> Result<Option<usize
     }
 
     let mut left = 0usize;
-    let mut right = type_count - 1;
+    let mut right = type_count.saturating_sub(1);
 
     while left <= right {
-        let mid = (left + right) / 2;
-        let entry_off = type_off + mid * 4;
-        let str_idx_bytes = buf
-            .get(entry_off..entry_off + 4)
-            .ok_or(AscError::BadTypeIdsRange)?;
-        let str_idx = u32::from_le_bytes(str_idx_bytes.try_into().unwrap()) as usize;
+        let mid = left.midpoint(right);
+        let str_idx = mid
+            .checked_mul(4)
+            .and_then(|rel| rel.checked_add(type_off))
+            .and_then(|entry_off| u32_at(buf, entry_off))
+            .ok_or(AscError::BadTypeIdsRange)? as usize;
         if str_idx >= string_count {
             return Err(AscError::BadTypeIdToStringIdx);
         }
-        let str_off_bytes = buf
-            .get(string_off + str_idx * 4..string_off + str_idx * 4 + 4)
-            .ok_or(AscError::BadStringIdsRange)?;
-        let str_off = u32::from_le_bytes(str_off_bytes.try_into().unwrap()) as usize;
+        let str_off = str_idx
+            .checked_mul(4)
+            .and_then(|rel| rel.checked_add(string_off))
+            .and_then(|entry_off| u32_at(buf, entry_off))
+            .ok_or(AscError::BadStringIdsRange)? as usize;
         if str_off >= buf.len() {
             return Err(AscError::BadStringDataOff);
         }
@@ -609,12 +571,13 @@ pub fn find_type_idx_raw(buf: &[u8], target_bytes: &[u8]) -> Result<Option<usize
 
         match desc_bytes.cmp(target_bytes) {
             std::cmp::Ordering::Equal => return Ok(Some(mid)),
-            std::cmp::Ordering::Less => left = mid + 1,
+            // `mid < type_count`, so this cannot saturate.
+            std::cmp::Ordering::Less => left = mid.saturating_add(1),
             std::cmp::Ordering::Greater => {
-                if mid == 0 {
+                let Some(below) = mid.checked_sub(1) else {
                     break;
-                }
-                right = mid - 1;
+                };
+                right = below;
             }
         }
     }
@@ -625,11 +588,11 @@ pub fn find_type_idx_raw(buf: &[u8], target_bytes: &[u8]) -> Result<Option<usize
 /// Checks if `class_defs` table contains `type_idx`.
 /// Matches Python `apk_handler._class_defs_contains_type_idx`.
 pub fn class_defs_contains_type_idx_raw(buf: &[u8], type_idx: u32) -> Result<bool, AscError> {
-    if buf.len() < 0x68 {
+    // Both reads succeed exactly when `buf.len() >= 0x68`.
+    let (Some(class_count), Some(class_off)) = (u32_at(buf, 0x60), u32_at(buf, 0x64)) else {
         return Ok(false);
-    }
-    let class_count = u32::from_le_bytes(buf[0x60..0x64].try_into().unwrap()) as usize;
-    let class_off = u32::from_le_bytes(buf[0x64..0x68].try_into().unwrap()) as usize;
+    };
+    let (class_count, class_off) = (class_count as usize, class_off as usize);
 
     if class_count == 0 {
         return Ok(false);
@@ -647,22 +610,13 @@ pub fn class_defs_contains_type_idx_raw(buf: &[u8], type_idx: u32) -> Result<boo
     }
 
     let needle = type_idx.to_le_bytes();
-    let slice = &buf[class_off..class_end];
+    let slice = buf
+        .get(class_off..class_end)
+        .ok_or(AscError::BadClassDefsRange)?;
 
-    let mut pos = 0;
-    while pos + 4 <= slice.len() {
-        if let Some(p) = slice[pos..].windows(4).position(|w| w == needle) {
-            let abs_p = pos + p;
-            if abs_p % 32 == 0 {
-                return Ok(true);
-            }
-            pos = abs_p + 1;
-        } else {
-            break;
-        }
-    }
-
-    Ok(false)
+    // Python scans every match of the needle and accepts the first 32-byte
+    // aligned one, which is the same as testing each aligned window.
+    Ok(slice.windows(4).step_by(32).any(|w| w == needle))
 }
 
 /// Checks if raw DEX buffer defines class with target descriptor bytes.
@@ -672,4 +626,10 @@ pub fn dex_defines_class_raw(buf: &[u8], target_bytes: &[u8]) -> Result<bool, As
         Some(idx) => class_defs_contains_type_idx_raw(buf, idx as u32),
         None => Ok(false),
     }
+}
+
+/// Reads a `field_ids` / `method_ids` entry, `(u16, u16, u32)`, at `off`.
+fn id_entry_at(buf: &[u8], off: usize) -> Option<(u16, u16, u32)> {
+    let entry = record(buf, off, 8)?;
+    Some((u16_at(entry, 0)?, u16_at(entry, 2)?, u32_at(entry, 4)?))
 }

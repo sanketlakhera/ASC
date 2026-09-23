@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used, clippy::indexing_slicing)]
+
 use asc_core::dex::{Dex, Header, dex_defines_class_raw, find_type_idx_raw};
 use asc_core::inflate::inflate_entry;
 use asc_core::leb128::{read_sleb128, read_uleb128, skip_uleb128, uleb128_len};

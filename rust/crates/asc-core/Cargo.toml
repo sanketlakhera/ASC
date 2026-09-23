@@ -16,3 +16,7 @@ proptest = "1.6"
 
 [build-dependencies]
 regex = "1.11"
+
+[lints.clippy]
+indexing_slicing = "deny"
+unwrap_used = "deny"

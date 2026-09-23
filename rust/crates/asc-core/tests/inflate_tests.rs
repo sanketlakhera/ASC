@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used, clippy::indexing_slicing)]
+
 use asc_core::error::AscError;
 use asc_core::inflate::inflate_entry;
 use asc_core::zip::{DexEntry, LH_SIG, parse_cd_dex_entries};

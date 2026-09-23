@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+mod bytes;
 pub mod dex;
 pub mod error;
 pub mod inflate;
