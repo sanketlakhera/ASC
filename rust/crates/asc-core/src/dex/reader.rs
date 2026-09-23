@@ -1,8 +1,9 @@
 use crate::dex::descriptor::{TypeInfo, parse_descriptor};
 use crate::dex::header::Header;
 use crate::error::AscError;
-use crate::leb128::read_uleb128;
+use crate::leb128::{read_uleb128, skip_uleb128};
 use crate::mutf8::{DexStr, decode_mutf8, encode_mutf8};
+use std::collections::HashSet;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProtoInfo {
@@ -24,12 +25,12 @@ pub struct FieldInfo {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MethodInfo {
-    pub index: u32,
+    pub index: u64,
     pub class_idx: u16,
     pub proto_idx: u16,
     pub name_idx: u32,
-    pub access_flags: u32,
-    pub code_off: u32,
+    pub access_flags: u64,
+    pub code_off: u64,
     pub is_direct: bool,
     pub is_virtual: bool,
 }
@@ -40,10 +41,11 @@ pub struct ClassInfo {
     pub class_def_off: u32,
     pub class_data_off: u32,
     pub fullname: DexStr,
-    pub static_fields: Vec<[u32; 2]>,   // [field_idx, access_flags]
-    pub instance_fields: Vec<[u32; 2]>, // [field_idx, access_flags]
-    pub direct_methods: Vec<[u32; 3]>,  // [method_idx, access_flags, code_off]
-    pub virtual_methods: Vec<[u32; 3]>, // [method_idx, access_flags, code_off]
+    // uleb values are up to 35 bits and Python never truncates them, hence u64.
+    pub static_fields: Vec<[u64; 2]>,   // [field_idx, access_flags]
+    pub instance_fields: Vec<[u64; 2]>, // [field_idx, access_flags]
+    pub direct_methods: Vec<[u64; 3]>,  // [method_idx, access_flags, code_off]
+    pub virtual_methods: Vec<[u64; 3]>, // [method_idx, access_flags, code_off]
     pub all_methods: Vec<MethodInfo>,
 }
 
@@ -164,14 +166,14 @@ impl<'a> Dex<'a> {
             let sz_bytes = self
                 .buf
                 .get(p_off..p_off + 4)
-                .ok_or(AscError::BadMethodIdsRange)?;
+                .ok_or(AscError::BadTypeListOffset)?;
             let size = u32::from_le_bytes(sz_bytes.try_into().unwrap()) as usize;
             let mut curr = p_off + 4;
             for _ in 0..size {
                 let type_bytes = self
                     .buf
                     .get(curr..curr + 2)
-                    .ok_or(AscError::BadMethodIdsRange)?;
+                    .ok_or(AscError::BadTypeListOffset)?;
                 param_type_idxs.push(u16::from_le_bytes(type_bytes.try_into().unwrap()));
                 curr += 2;
             }
@@ -228,7 +230,7 @@ impl<'a> Dex<'a> {
         let name_idx = u32::from_le_bytes(bytes[4..8].try_into().unwrap());
 
         Ok(MethodInfo {
-            index: method_idx as u32,
+            index: method_idx as u64,
             class_idx,
             proto_idx,
             name_idx,
@@ -241,6 +243,44 @@ impl<'a> Dex<'a> {
 
     /// Parses `ClassInfo` for class definition index `class_def_idx`.
     pub fn get_class(&self, class_def_idx: usize) -> Result<ClassInfo, AscError> {
+        let mut class = self.get_class_data(class_def_idx)?;
+        // Python resolves `fullname` lazily, after class_data has been walked, so a
+        // corrupt class_data error wins over a bad type index.
+        let (_str_idx, type_info) = self.get_type(class.class_idx as usize)?;
+        class.fullname = type_info.descriptor;
+        Ok(class)
+    }
+
+    /// Like `get_class` but leaves `fullname` empty: the class_def and class_data
+    /// only, which is all Python's code_item walk touches.
+    pub fn get_class_data(&self, class_def_idx: usize) -> Result<ClassInfo, AscError> {
+        let (class, res) = self.get_class_data_partial(class_def_idx);
+        res.map(|()| class)
+    }
+
+    /// `get_class_data` that also returns what was walked before an error. Python
+    /// mutates each cached DexMethod as soon as its entry resolves, so entries read
+    /// before a failure still change later readers; callers modelling that need them.
+    pub fn get_class_data_partial(
+        &self,
+        class_def_idx: usize,
+    ) -> (ClassInfo, Result<(), AscError>) {
+        let mut class = ClassInfo {
+            class_idx: 0,
+            class_def_off: 0,
+            class_data_off: 0,
+            fullname: DexStr::new(Vec::new()),
+            static_fields: Vec::new(),
+            instance_fields: Vec::new(),
+            direct_methods: Vec::new(),
+            virtual_methods: Vec::new(),
+            all_methods: Vec::new(),
+        };
+        let res = self.walk_class_data(class_def_idx, &mut class);
+        (class, res)
+    }
+
+    fn walk_class_data(&self, class_def_idx: usize, class: &mut ClassInfo) -> Result<(), AscError> {
         let (off, count) = self.header.classes;
         if class_def_idx >= count {
             return Err(AscError::BadClassDefsRange);
@@ -251,106 +291,118 @@ impl<'a> Dex<'a> {
             .get(entry_off..entry_off + 32)
             .ok_or(AscError::BadClassDefsRange)?;
 
-        let class_idx = u32::from_le_bytes(bytes[0..4].try_into().unwrap());
-        let class_data_off = u32::from_le_bytes(bytes[24..28].try_into().unwrap());
+        class.class_idx = u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]);
+        class.class_def_off = entry_off as u32;
+        class.class_data_off = u32::from_le_bytes([bytes[24], bytes[25], bytes[26], bytes[27]]);
+        if class.class_data_off == 0 {
+            return Ok(());
+        }
 
-        let (_str_idx, type_info) = self.get_type(class_idx as usize)?;
-        let fullname = type_info.descriptor;
+        let mut p = class.class_data_off as usize;
+        let (static_fields_size, n) = read_uleb128(self.buf, p)?;
+        p += n;
+        let (instance_fields_size, n) = read_uleb128(self.buf, p)?;
+        p += n;
+        let (direct_methods_size, n) = read_uleb128(self.buf, p)?;
+        p += n;
+        let (virtual_methods_size, n) = read_uleb128(self.buf, p)?;
+        p += n;
 
-        let mut static_fields = Vec::new();
-        let mut instance_fields = Vec::new();
-        let mut direct_methods = Vec::new();
-        let mut virtual_methods = Vec::new();
-        let mut all_methods = Vec::new();
-
-        if class_data_off != 0 {
-            let mut p = class_data_off as usize;
-            let (static_fields_size, n) = read_uleb128(self.buf, p)?;
-            p += n;
-            let (instance_fields_size, n) = read_uleb128(self.buf, p)?;
-            p += n;
-            let (direct_methods_size, n) = read_uleb128(self.buf, p)?;
-            p += n;
-            let (virtual_methods_size, n) = read_uleb128(self.buf, p)?;
-            p += n;
-
-            let mut f_idx = 0u32;
-            for _ in 0..static_fields_size {
+        // Python accumulates indices as unbounded ints and resolves each entry as
+        // soon as it is read (tinydex DexField / DexMethod), so the running index
+        // is u64 and every entry is bounds-checked against the buffer, not the count.
+        // A repeat inside a list, or a member of both lists of a pair, is
+        // "bad class_data", checked before the entry resolves (tinydex order).
+        let mut static_idxs = HashSet::new();
+        for (size, is_static) in [(static_fields_size, true), (instance_fields_size, false)] {
+            let mut f_idx = 0u64;
+            for i in 0..size {
                 let (diff, n) = read_uleb128(self.buf, p)?;
                 p += n;
-                f_idx += diff as u32;
+                f_idx = f_idx.saturating_add(diff);
                 let (flags, n) = read_uleb128(self.buf, p)?;
                 p += n;
-                static_fields.push([f_idx, flags as u32]);
-            }
-
-            let mut f_idx = 0u32;
-            for _ in 0..instance_fields_size {
-                let (diff, n) = read_uleb128(self.buf, p)?;
-                p += n;
-                f_idx += diff as u32;
-                let (flags, n) = read_uleb128(self.buf, p)?;
-                p += n;
-                instance_fields.push([f_idx, flags as u32]);
-            }
-
-            let mut m_idx = 0u32;
-            for _ in 0..direct_methods_size {
-                let (diff, n) = read_uleb128(self.buf, p)?;
-                p += n;
-                m_idx += diff as u32;
-                let (flags, n) = read_uleb128(self.buf, p)?;
-                p += n;
-                let (code_off, n) = read_uleb128(self.buf, p)?;
-                p += n;
-                direct_methods.push([m_idx, flags as u32, code_off as u32]);
-
-                if let Ok(mut method) = self.get_method(m_idx as usize) {
-                    method.access_flags = flags as u32;
-                    method.code_off = code_off as u32;
-                    method.is_direct = true;
-                    all_methods.push(method);
+                if (i > 0 && diff == 0) || (!is_static && static_idxs.contains(&f_idx)) {
+                    return Err(AscError::BadClassData);
                 }
-            }
-
-            let mut m_idx = 0u32;
-            for _ in 0..virtual_methods_size {
-                let (diff, n) = read_uleb128(self.buf, p)?;
-                p += n;
-                m_idx += diff as u32;
-                let (flags, n) = read_uleb128(self.buf, p)?;
-                p += n;
-                let (code_off, n) = read_uleb128(self.buf, p)?;
-                p += n;
-                virtual_methods.push([m_idx, flags as u32, code_off as u32]);
-
-                if let Ok(mut method) = self.get_method(m_idx as usize) {
-                    method.access_flags = flags as u32;
-                    method.code_off = code_off as u32;
-                    method.is_virtual = true;
-                    all_methods.push(method);
+                if !self.id_entry_in_buf(self.header.fields.0, f_idx) {
+                    return Err(AscError::BadFieldIdsRange);
+                }
+                if is_static {
+                    static_idxs.insert(f_idx);
+                    class.static_fields.push([f_idx, flags]);
+                } else {
+                    class.instance_fields.push([f_idx, flags]);
                 }
             }
         }
 
-        Ok(ClassInfo {
-            class_idx,
-            class_def_off: entry_off as u32,
-            class_data_off,
-            fullname,
-            static_fields,
-            instance_fields,
-            direct_methods,
-            virtual_methods,
-            all_methods,
-        })
+        let mut direct_idxs = HashSet::new();
+        for (size, is_direct) in [(direct_methods_size, true), (virtual_methods_size, false)] {
+            let mut m_idx = 0u64;
+            for i in 0..size {
+                let (diff, n) = read_uleb128(self.buf, p)?;
+                p += n;
+                m_idx = m_idx.saturating_add(diff);
+                let (flags, n) = read_uleb128(self.buf, p)?;
+                p += n;
+                let (code_off, n) = read_uleb128(self.buf, p)?;
+                p += n;
+                if (i > 0 && diff == 0) || (!is_direct && direct_idxs.contains(&m_idx)) {
+                    return Err(AscError::BadClassData);
+                }
+                let entry = self
+                    .read_id_entry(self.header.methods.0, m_idx)
+                    .ok_or(AscError::BadMethodIdsRange)?;
+                if is_direct {
+                    direct_idxs.insert(m_idx);
+                    class.direct_methods.push([m_idx, flags, code_off]);
+                } else {
+                    class.virtual_methods.push([m_idx, flags, code_off]);
+                }
+                class.all_methods.push(MethodInfo {
+                    index: m_idx,
+                    class_idx: entry.0,
+                    proto_idx: entry.1,
+                    name_idx: entry.2,
+                    access_flags: flags,
+                    code_off,
+                    is_direct,
+                    is_virtual: !is_direct,
+                });
+            }
+        }
+        Ok(())
+    }
+
+    /// Whether the 8-byte `field_ids` / `method_ids` entry `idx` of the table at
+    /// `table_off` lies inside the buffer. Python checks only this, not the count.
+    fn id_entry_in_buf(&self, table_off: usize, idx: u64) -> bool {
+        idx.checked_mul(8)
+            .and_then(|o| o.checked_add(table_off as u64))
+            .and_then(|o| o.checked_add(8))
+            .is_some_and(|end| end <= self.buf.len() as u64)
+    }
+
+    /// Reads the `(u16, u16, u32)` id entry `idx` with Python's buffer-only bound.
+    fn read_id_entry(&self, table_off: usize, idx: u64) -> Option<(u16, u16, u32)> {
+        if !self.id_entry_in_buf(table_off, idx) {
+            return None;
+        }
+        let off = table_off + (idx as usize) * 8;
+        let b = self.buf.get(off..off + 8)?;
+        Some((
+            u16::from_le_bytes([b[0], b[1]]),
+            u16::from_le_bytes([b[2], b[3]]),
+            u32::from_le_bytes([b[4], b[5], b[6], b[7]]),
+        ))
     }
 
     /// Reads code_item header and instruction bytes at `code_off`.
     pub fn get_code_item(&self, code_off: usize) -> Result<CodeItemInfo<'a>, AscError> {
         let bytes = self
             .buf
-            .get(code_off..code_off + 16)
+            .get(code_off..code_off.saturating_add(16))
             .ok_or(AscError::BadCodeItemOffset)?;
 
         let registers_size = u16::from_le_bytes(bytes[0..2].try_into().unwrap());
@@ -360,18 +412,13 @@ impl<'a> Dex<'a> {
         let debug_info_off = u32::from_le_bytes(bytes[8..12].try_into().unwrap());
         let insns_size = u32::from_le_bytes(bytes[12..16].try_into().unwrap());
 
-        let insns_byte_len = (insns_size as usize)
-            .checked_mul(2)
-            .ok_or(AscError::BadCodeItemOffset)?;
+        // Python slices `buf[off + 16 : off + 16 + insns_size * 2]`, which clamps
+        // silently at the buffer end; only the 16-byte header is a contract error.
         let insns_start = code_off + 16;
         let insns_end = insns_start
-            .checked_add(insns_byte_len)
-            .ok_or(AscError::BadCodeItemOffset)?;
-
-        let insns_bytes = self
-            .buf
-            .get(insns_start..insns_end)
-            .ok_or(AscError::BadCodeItemOffset)?;
+            .saturating_add(insns_size as usize * 2)
+            .min(self.buf.len());
+        let insns_bytes = self.buf.get(insns_start..insns_end).unwrap_or(&[]);
 
         Ok(CodeItemInfo {
             registers_size,
@@ -392,6 +439,13 @@ impl<'a> Dex<'a> {
     /// Finds a class by its descriptor name (e.g. "Lexample/Test;").
     /// Returns the class definition index (0..class_count) if found.
     pub fn find_class(&self, fullname: &str) -> Result<Option<usize>, AscError> {
+        let units: Vec<u16> = fullname.encode_utf16().collect();
+        self.find_class_units(&units)
+    }
+
+    /// `find_class` for a name held as UTF-16 units, which may contain lone
+    /// surrogates the way a Python `str` can.
+    pub fn find_class_units(&self, fullname: &[u16]) -> Result<Option<usize>, AscError> {
         let (string_off, string_count) = self.header.strings;
         let string_end = string_off
             .checked_add(
@@ -424,12 +478,37 @@ impl<'a> Dex<'a> {
             return Err(AscError::BadClassDefsRange);
         }
 
-        let target_units: Vec<u16> = fullname.encode_utf16().collect();
-        let target_bytes = encode_mutf8(&target_units);
+        let target_bytes = encode_mutf8(fullname);
 
-        let type_idx = match self.find_type_idx(&target_bytes)? {
-            Some(idx) => idx as u32,
-            None => return Ok(None),
+        // tinydex `DEX.get_class`: resolves descriptors through `get_string_bytes`, so a
+        // bad string index reports "bad string_ids range", unlike the APK-scan search
+        // in `find_type_idx_raw` ("bad type_id->string_idx").
+        // Inclusive bounds and `(left + right) / 2` exactly as Python, so the same
+        // strings are probed and the same error fires first.
+        let mut type_idx = None;
+        let (mut left, mut right) = (0i64, type_count as i64 - 1);
+        while left <= right {
+            let mid = ((left + right) / 2) as usize;
+            let entry_off = type_off + mid * 4;
+            let desc_idx = self
+                .buf
+                .get(entry_off..entry_off + 4)
+                .map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+                .ok_or(AscError::BadTypeIdsRange)?;
+            match self
+                .get_string_bytes(desc_idx as usize)?
+                .cmp(target_bytes.as_slice())
+            {
+                std::cmp::Ordering::Equal => {
+                    type_idx = Some(mid as u32);
+                    break;
+                }
+                std::cmp::Ordering::Less => left = mid as i64 + 1,
+                std::cmp::Ordering::Greater => right = mid as i64 - 1,
+            }
+        }
+        let Some(type_idx) = type_idx else {
+            return Ok(None);
         };
 
         for idx in 0..class_count {
@@ -457,10 +536,9 @@ pub fn read_string_data_bytes(buf: &[u8], str_off: usize) -> Result<&[u8], AscEr
     if str_off >= buf.len() {
         return Err(AscError::BadStringDataOff);
     }
-    let (_utf16_len, uleb_sz) = read_uleb128(buf, str_off)?;
-    let data_start = str_off
-        .checked_add(uleb_sz)
-        .ok_or(AscError::UnterminatedStringDataItem)?;
+    // apk_handler skips the prefix with the unbounded `_skip_uleb128`, not the
+    // five-byte `read_uleb128_fast` tinydex uses.
+    let data_start = skip_uleb128(buf, str_off)?;
     if data_start > buf.len() {
         return Err(AscError::UnterminatedStringDataItem);
     }

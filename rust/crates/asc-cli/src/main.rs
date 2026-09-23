@@ -10,7 +10,7 @@ use clap::{Parser, Subcommand};
 use memmap2::Mmap;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fs::{self, File};
 use std::path::PathBuf;
 
@@ -45,6 +45,14 @@ fn sha256_hex(bytes: &[u8]) -> String {
     s
 }
 
+/// Code points of a UTF-16 string the way Python's `str` holds them: valid pairs
+/// combine, lone surrogates stay as their own value.
+fn code_points(units: &[u16]) -> Vec<u32> {
+    char::decode_utf16(units.iter().copied())
+        .map(|r| r.map_or_else(|e| u32::from(e.unpaired_surrogate()), u32::from))
+        .collect()
+}
+
 fn dump_opcodes() -> BTreeMap<String, Value> {
     let mut map = BTreeMap::new();
     for (op, info_opt) in OPCODES.iter().enumerate() {
@@ -68,7 +76,7 @@ fn dump_opcodes() -> BTreeMap<String, Value> {
     map
 }
 
-fn dump_dex_primitives(dex_buf: &[u8], _dex_name: &str, query_list: &[String]) -> Value {
+fn dump_dex_primitives(dex_buf: &[u8], _dex_name: &str, query_list: &[Vec<u16>]) -> Value {
     let mut result = json!({});
 
     // 1. Header
@@ -240,26 +248,62 @@ fn dump_dex_primitives(dex_buf: &[u8], _dex_name: &str, query_list: &[String]) -
         result["methods"] = json!(methods_dump);
     }
 
-    // 7. Classes & Class Data
-    let mut classes_dump = Vec::new();
+    // 7. Classes & Class Data, 8. Code Items.
+    //
+    // Python's tinydex keeps one mutable DexMethod per method index, shared by every
+    // class that lists it (only repeats *across* classes survive "bad class_data").
+    // Two effects reach the dump: `is_virtual` is never cleared, so a direct entry
+    // whose index an earlier class listed as virtual is also dumped as virtual; and
+    // `code_off` is last-write-wins over every class parsed so far, including the
+    // entries a failing class resolved before its error. Both are replayed here in
+    // Python's order: section 7 parses classes until the first error, section 8
+    // reuses those parses and parses the rest on first touch.
     let class_count = dex.header.classes.1;
+    let mut code_off_of: HashMap<u64, u64> = HashMap::new();
+    let apply_writes = |c: &asc_core::ClassInfo, code_off_of: &mut HashMap<u64, u64>| {
+        for m in &c.all_methods {
+            code_off_of.insert(m.index, m.code_off);
+        }
+    };
+
+    let mut classes_dump = Vec::new();
     let mut class_err = None;
-    let mut parsed_classes = Vec::new();
+    let mut parsed: BTreeMap<usize, asc_core::ClassInfo> = BTreeMap::new();
+    let mut ever_virtual: HashSet<u64> = HashSet::new();
     for idx in 0..class_count {
-        match dex.get_class(idx) {
-            Ok(c) => {
-                classes_dump.push(json!({
-                    "class_idx": c.class_idx,
-                    "class_def_off": c.class_def_off,
-                    "class_data_off": c.class_data_off,
-                    "fullname": c.fullname.as_slice(),
-                    "static_fields": c.static_fields,
-                    "instance_fields": c.instance_fields,
-                    "direct_methods": c.direct_methods,
-                    "virtual_methods": c.virtual_methods,
-                }));
-                parsed_classes.push(c);
-            }
+        let (c, res) = dex.get_class_data_partial(idx);
+        apply_writes(&c, &mut code_off_of);
+        if let Err(e) = res {
+            class_err = Some(e.to_string());
+            break;
+        }
+        // The parse is cached even when resolving the name fails afterwards.
+        let fullname = dex
+            .get_type(c.class_idx as usize)
+            .map(|(_, t)| t.descriptor);
+        let entry = fullname.map(|name| {
+            let virtual_methods: Vec<[u64; 3]> = c
+                .direct_methods
+                .iter()
+                .filter(|m| ever_virtual.contains(&m[0]))
+                .chain(&c.virtual_methods)
+                .copied()
+                .collect();
+            json!({
+                "class_idx": c.class_idx,
+                "class_def_off": c.class_def_off,
+                "class_data_off": c.class_data_off,
+                "fullname": name.as_slice(),
+                "static_fields": c.static_fields,
+                "instance_fields": c.instance_fields,
+                "direct_methods": c.direct_methods,
+                "virtual_methods": virtual_methods,
+            })
+        });
+        ever_virtual.extend(c.virtual_methods.iter().map(|m| m[0]));
+        parsed.insert(idx, c);
+        match entry {
+            Ok(v) => classes_dump.push(v),
             Err(e) => {
                 class_err = Some(e.to_string());
                 break;
@@ -272,20 +316,25 @@ fn dump_dex_primitives(dex_buf: &[u8], _dex_name: &str, query_list: &[String]) -
         result["classes"] = json!(classes_dump);
     }
 
-    // 8. Code Items
     let mut code_items_dump = BTreeMap::new();
     let mut code_err = None;
-    for idx in 0..class_count {
-        let c = match dex.get_class(idx) {
-            Ok(c) => c,
-            Err(e) => {
-                code_err = Some(e.to_string());
-                break;
+    'classes: for idx in 0..class_count {
+        let c = match parsed.remove(&idx) {
+            Some(c) => c,
+            None => {
+                let (c, res) = dex.get_class_data_partial(idx);
+                apply_writes(&c, &mut code_off_of);
+                if let Err(e) = res {
+                    code_err = Some(e.to_string());
+                    break;
+                }
+                c
             }
         };
         for m in &c.all_methods {
-            if m.code_off != 0 && !code_items_dump.contains_key(&m.code_off.to_string()) {
-                let off = m.code_off as usize;
+            let code_off = code_off_of.get(&m.index).copied().unwrap_or(m.code_off);
+            if code_off != 0 && !code_items_dump.contains_key(&code_off.to_string()) {
+                let off = code_off as usize;
                 match dex.get_code_item(off) {
                     Ok(item) => {
                         code_items_dump.insert(
@@ -305,13 +354,10 @@ fn dump_dex_primitives(dex_buf: &[u8], _dex_name: &str, query_list: &[String]) -
                     }
                     Err(e) => {
                         code_err = Some(e.to_string());
-                        break;
+                        break 'classes;
                     }
                 }
             }
-        }
-        if code_err.is_some() {
-            break;
         }
     }
     if let Some(err) = code_err {
@@ -323,10 +369,16 @@ fn dump_dex_primitives(dex_buf: &[u8], _dex_name: &str, query_list: &[String]) -
     // 9. get_class queries
     let mut get_class_dump = Vec::new();
     for q in query_list {
-        match dex.find_class(q) {
+        match dex.find_class_units(q) {
             Ok(found_opt) => {
-                let class_idx =
-                    found_opt.and_then(|idx| parsed_classes.get(idx).map(|c| c.class_idx));
+                // Python's DexClass reads class_idx from the class_def itself; class_data
+                // is never parsed here, so a class whose class_data is corrupt still counts.
+                let class_idx = found_opt.and_then(|idx| {
+                    let off = dex.header.classes.0 + idx * 32;
+                    dex_buf
+                        .get(off..off + 4)
+                        .map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+                });
                 get_class_dump.push(json!({
                     "name": q,
                     "found": found_opt.is_some(),
@@ -425,10 +477,20 @@ fn dump_apk_primitives(apk_bytes: &[u8], extra_queries: &[String]) -> Value {
         let Ok(dex) = Dex::new(data) else {
             continue;
         };
-        for idx in 0..dex.header.classes.1 {
-            if let Ok(cls) = dex.get_class(idx) {
-                class_names_set.insert(cls.fullname.to_string_lossy());
-            }
+        // Python reads `d.classes[c].fullname` only (no class_data) and the first
+        // exception ends the loop for this DEX.
+        let (class_off, class_count) = dex.header.classes;
+        for idx in 0..class_count {
+            let def_off = class_off + idx * 32;
+            // DexClass.__init__ reads class_data_off at +24, so the first 28 bytes must exist.
+            let Some(def) = data.get(def_off..def_off + 28) else {
+                break;
+            };
+            let class_idx = u32::from_le_bytes([def[0], def[1], def[2], def[3]]);
+            match dex.get_type(class_idx as usize) {
+                Ok((_, ty)) => class_names_set.insert(ty.descriptor.as_slice().to_vec()),
+                Err(_) => break,
+            };
         }
     }
 
@@ -437,14 +499,18 @@ fn dump_apk_primitives(apk_bytes: &[u8], extra_queries: &[String]) -> Value {
         "Lcom/missing/TargetClass;",
         "Lnonexistent/Cls;",
     ];
-    for p in probe_names {
-        class_names_set.insert(p.to_string());
-    }
-    for eq in extra_queries {
-        class_names_set.insert(eq.clone());
+    for p in probe_names
+        .iter()
+        .copied()
+        .chain(extra_queries.iter().map(String::as_str))
+    {
+        class_names_set.insert(p.encode_utf16().collect());
     }
 
-    let query_list: Vec<String> = class_names_set.into_iter().collect();
+    // Python sorts `str` by code point; UTF-16 unit order differs once a
+    // surrogate pair meets a unit in U+E000..=U+FFFF.
+    let mut query_list: Vec<Vec<u16>> = class_names_set.into_iter().collect();
+    query_list.sort_by_cached_key(|q| code_points(q));
 
     // 3. apk.defines_class
     let mut defines_dump = BTreeMap::new();
@@ -452,18 +518,21 @@ fn dump_apk_primitives(apk_bytes: &[u8], extra_queries: &[String]) -> Value {
         let mut entry_defines = Vec::new();
 
         for q in &query_list {
-            let q_units: Vec<u16> = q.encode_utf16().collect();
-            let q_bytes = encode_mutf8(&q_units);
+            let q_bytes = encode_mutf8(q);
 
             match find_type_idx_raw(data, &q_bytes) {
-                Ok(Some(t_idx)) => {
-                    let defined = dex_defines_class_raw(data, &q_bytes).unwrap_or(false);
-                    entry_defines.push(json!({
+                Ok(Some(t_idx)) => match dex_defines_class_raw(data, &q_bytes) {
+                    Ok(defined) => entry_defines.push(json!({
                         "name": q,
                         "type_idx": t_idx,
                         "defined": defined,
-                    }));
-                }
+                    })),
+                    // Python raises out of the whole entry, e.g. "bad class_defs range".
+                    Err(e) => entry_defines.push(json!({
+                        "name": q,
+                        "error": e.to_string(),
+                    })),
+                },
                 Ok(None) => {
                     entry_defines.push(json!({
                         "name": q,

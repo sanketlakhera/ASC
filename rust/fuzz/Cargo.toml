@@ -1,0 +1,69 @@
+[package]
+name = "asc-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+asc-core = { path = "../crates/asc-core" }
+
+# Separate workspace: cargo-fuzz needs nightly and sanitizer flags that the
+# main workspace must not inherit.
+[workspace]
+members = ["."]
+
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "leb128"
+path = "fuzz_targets/leb128.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "mutf8"
+path = "fuzz_targets/mutf8.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "zip_cd"
+path = "fuzz_targets/zip_cd.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "inflate"
+path = "fuzz_targets/inflate.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "dex_header"
+path = "fuzz_targets/dex_header.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "container"
+path = "fuzz_targets/container.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "tinydex_walk"
+path = "fuzz_targets/tinydex_walk.rs"
+test = false
+doc = false
+bench = false

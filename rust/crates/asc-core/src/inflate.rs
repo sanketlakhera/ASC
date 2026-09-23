@@ -4,6 +4,8 @@ use flate2::{Decompress, FlushDecompress, Status};
 use std::sync::atomic::{AtomicBool, Ordering};
 
 const DEFLATE_CHUNK: usize = 1 << 19; // 512 KiB
+/// Upper bound of raw deflate expansion (258-byte match per ~2 bits of input).
+const DEFLATE_MAX_RATIO: usize = 1032;
 
 /// Inflates a DEX entry from an APK / ZIP buffer.
 ///
@@ -70,10 +72,13 @@ fn inflate_deflate(
     cancel: Option<&AtomicBool>,
 ) -> Result<Option<Vec<u8>>, AscError> {
     let mut decompressor = Decompress::new(false);
+    // The hint comes from the central directory and is attacker-controlled; never
+    // reserve more than the stream could possibly produce.
+    let max_output = comp_slice.len().saturating_mul(DEFLATE_MAX_RATIO);
     let mut out = Vec::with_capacity(if capacity_hint > 0 {
-        capacity_hint
+        capacity_hint.min(max_output)
     } else {
-        comp_slice.len() * 2
+        comp_slice.len().saturating_mul(2)
     });
     let mut temp_buf = [0u8; 64 * 1024];
 
