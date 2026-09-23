@@ -1,0 +1,18 @@
+[package]
+name = "asc-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "asc"
+path = "src/main.rs"
+
+[dependencies]
+asc-core = { path = "../asc-core" }
+clap = { version = "4.5", features = ["derive"] }
+memmap2 = "0.9"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.10"

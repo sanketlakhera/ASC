@@ -63,3 +63,33 @@ jobs:
           name: source-release-preview
           path: dist/
           if-no-files-found: error
+
+  rust-primitives:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Rust format check
+        run: cargo fmt --check
+        working-directory: rust
+      - name: Rust clippy
+        run: cargo clippy --all-targets -- -D warnings
+        working-directory: rust
+      - name: Rust tests
+        run: cargo test
+        working-directory: rust
+      - name: Build asc binary
+        run: cargo build --bin asc
+        working-directory: rust
+      - name: Conformance primitives check
+        run: python rust/conformance/check.py --primitives --bin rust/target/debug/asc
+
