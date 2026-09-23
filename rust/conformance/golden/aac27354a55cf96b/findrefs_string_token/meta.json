@@ -7,7 +7,7 @@
   ],
   "corpus_name": "dex041",
   "apk_sha256": "aac27354a55cf96bde9802ff1ce62cd027332d646f588e305a14f313ec24f324",
-  "oracle_git_revision": "e266d73",
+  "oracle_git_revision": "oracle-m0-6-gb5db061",
   "git_dirty": false,
   "diff_sha256": null,
   "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
