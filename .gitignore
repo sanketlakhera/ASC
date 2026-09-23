@@ -6,6 +6,8 @@ dist/
 build/
 .venv/
 
+.DS_Store
+
 # Android artifacts
 *.dex
 *.apk

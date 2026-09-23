@@ -11,12 +11,14 @@ Usage:
   uv run --python 3.12 --with "androguard==4.1.3" python rust/conformance/gen_golden.py
 """
 import argparse
+import gzip
 import hashlib
 import json
 import os
 from pathlib import Path
 import re
 import shutil
+import struct
 import subprocess
 import sys
 import zipfile
@@ -24,12 +26,17 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tests"))
+sys.path.insert(0, str(ROOT / "rust" / "conformance"))
 
 from dex_fixture import make_dex, make_static_field_dex, make_dex041_container, make_axml, DEFAULT_STRINGS
 from droidasc.asc_core.utils.mutf8 import encode_mutf8
 from droidasc.asc_core.core.dex.dex_manager import DexManager
 from droidasc.asc_client.apk_handler import ApkHandler
-import androguard
+from dump_primitives import dump_apk_primitives
+try:
+    import androguard
+except Exception:
+    androguard = None
 
 DEBUG_REGEX = re.compile(r"^\[DEBUG\].*$\n?", re.MULTILINE)
 SEP_REGEX = re.compile(r"^-{40,}.*$\n?", re.MULTILINE)
@@ -139,6 +146,39 @@ def build_corpus(corpus_dir: Path) -> dict:
     ads_apk = ROOT / "Ads Solution June.apk"
     if ads_apk.exists():
         corpus["ads_solution"] = ads_apk
+
+    # 7. Corrupt inputs for error contract verification
+    apk_empty = corpus_dir / "fixture_corrupt_empty.apk"
+    apk_empty.write_bytes(b"")
+    corpus["corrupt_empty"] = apk_empty
+
+    apk_eocd = corpus_dir / "fixture_corrupt_eocd.apk"
+    apk_eocd.write_bytes(b"\x00" * 10 + b"PK\x05\x06" + b"\x00" * 10)
+    corpus["corrupt_eocd"] = apk_eocd
+
+    apk_cd = corpus_dir / "fixture_corrupt_cd.apk"
+    apk_cd.write_bytes(b"PK\x05\x06" + b"\x00" * 8 + struct.pack("<IIH", 1000, 1000, 0))
+    corpus["corrupt_cd"] = apk_cd
+
+    apk_corrupt_deflate = corpus_dir / "fixture_corrupt_deflate.apk"
+    with zipfile.ZipFile(apk_corrupt_deflate, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        _write_entry(zf, "classes.dex", b"hello world from classes dex", zipfile.ZIP_DEFLATED)
+    raw_data = bytearray(apk_corrupt_deflate.read_bytes())
+    raw_data[45:55] = b"\xff" * 10
+    apk_corrupt_deflate.write_bytes(raw_data)
+    corpus["corrupt_deflate"] = apk_corrupt_deflate
+
+    apk_trunc_hdr = corpus_dir / "fixture_corrupt_header.apk"
+    with zipfile.ZipFile(apk_trunc_hdr, "w") as zf:
+        _write_entry(zf, "classes.dex", b"dex\n035\x00short", zipfile.ZIP_STORED)
+    corpus["corrupt_header"] = apk_trunc_hdr
+
+    raw_dex = make_dex()
+    for trunc, cname in ((0x70, "corrupt_trunc_70"), (0x90, "corrupt_trunc_90"), (0xB0, "corrupt_trunc_b0")):
+        apk_trunc = corpus_dir / f"fixture_{cname}.apk"
+        with zipfile.ZipFile(apk_trunc, "w") as zf:
+            _write_entry(zf, "classes.dex", raw_dex[:trunc], zipfile.ZIP_STORED)
+        corpus[cname] = apk_trunc
 
     return corpus
 
@@ -293,6 +333,20 @@ def generate_goldens(output_dir: Path, corpus_dir: Path, allow_dirty: bool = Fal
             }
             (target_dir / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
             manifest_summary.append({"path": str(target_dir.relative_to(output_dir)), "meta": meta})
+
+    # Level 3: Dump primitives for every corpus APK
+    print("\nGenerating Level 3 primitive goldens for corpus APKs...")
+    for cname, apk_path in corpus.items():
+        apk_hash = sha256_file(apk_path)[:16]
+        prim_dir = output_dir / apk_hash / "primitives"
+        prim_dir.mkdir(parents=True, exist_ok=True)
+        dump = dump_apk_primitives(apk_path)
+        # One gzipped file per APK: the plain JSON reaches 250 MB, past GitHub's 100 MB limit.
+        # mtime=0 keeps the archive bytes deterministic across regenerations.
+        payload = json.dumps(dump, indent=2, sort_keys=True).encode("utf-8")
+        with open(prim_dir / "primitives.json.gz", "wb") as raw:
+            with gzip.GzipFile(filename="primitives.json", mode="wb", fileobj=raw, compresslevel=9, mtime=0) as gz:
+                gz.write(payload)
 
     (output_dir / "manifest.json").write_text(json.dumps(manifest_summary, indent=2), encoding="utf-8")
     print(f"\nSuccessfully generated {len(manifest_summary)} golden test cases in {output_dir}.")
