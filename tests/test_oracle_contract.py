@@ -250,3 +250,56 @@ class CorruptInputTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn('Error: bad APK archive: not a valid zip file', result.stderr)
 
+
+class TinydexCorruptionTests(unittest.TestCase):
+    """Corrupt DEX bodies reach tinydex as clean ValueErrors, never struct.error,
+    and a failed class_data walk leaves nothing behind for the next caller."""
+
+    # make_dex() places the single class_data at 294:
+    # counts 0,0,2,0 | m0: diff 0, flags 9, code_off 0x90 0x02 | m1: diff 1, ...
+    CLASS_DATA = 294
+    M1_DIFF = CLASS_DATA + 8
+    M0_CODE_OFF = CLASS_DATA + 6
+
+    def parse(self, raw):
+        return DEX.parse(memoryview(bytes(raw)), 'classes.dex')
+
+    def assert_class_data_error(self, raw, message):
+        cls = self.parse(raw).classes[0]
+        for attempt in range(2):
+            with self.subTest(attempt=attempt):
+                with self.assertRaisesRegex(ValueError, f'^{message}$'):
+                    cls._parse_class_data()
+                self.assertEqual((cls._fields, cls._methods), ([], []))
+
+    def test_fixture_layout(self):
+        raw = make_dex()
+        self.assertEqual(struct.unpack_from('<I', raw, 176 + 24)[0], self.CLASS_DATA)
+        self.assertEqual(raw[self.M1_DIFF], 1)
+
+    def test_repeated_method_index_is_bad_class_data(self):
+        raw = bytearray(make_dex())
+        raw[self.M1_DIFF] = 0
+        self.assert_class_data_error(raw, 'bad class_data')
+
+    def test_method_index_past_buffer_is_bad_method_ids_range(self):
+        # Move method_ids so entry 0 is the last whole entry and entry 1 runs past the end.
+        raw = bytearray(make_dex())
+        struct.pack_into('<I', raw, 0x5C, len(raw) - 12)
+        self.assert_class_data_error(raw, 'bad method_ids range')
+
+    def test_code_item_header_past_end_is_bad_code_item_offset(self):
+        raw = bytearray(make_dex())
+        off = len(raw) - 8
+        raw[self.M0_CODE_OFF:self.M0_CODE_OFF + 2] = bytes([off & 0x7F | 0x80, off >> 7])
+        cls = self.parse(raw).classes[0]
+        cls._parse_class_data()
+        with self.assertRaisesRegex(ValueError, '^bad code_item offset$'):
+            cls.methods[0].bytecode
+
+    def test_truncated_type_list_is_bad_type_list_offset(self):
+        raw = bytearray(make_dex())
+        protos_off = struct.unpack_from('<I', raw, 0x4C)[0]
+        struct.pack_into('<I', raw, protos_off + 8, len(raw) - 2)
+        with self.assertRaisesRegex(ValueError, '^bad type_list offset$'):
+            self.parse(raw).get_prototype(0).parameters_type

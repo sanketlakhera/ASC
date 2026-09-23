@@ -163,11 +163,15 @@ def dump_dex_primitives(dex_buf: bytes, dex_name: str, query_list: list[str]) ->
             p = dex.get_prototype(idx)
             param_idxs = []
             if p.parameters_off != 0:
-                param_size = struct.unpack_from("<I", dex_buf, p.parameters_off)[0]
-                p_off = p.parameters_off + 4
-                for _ in range(param_size):
-                    param_idxs.append(struct.unpack_from("<H", dex_buf, p_off)[0])
-                    p_off += 2
+                # Same guard as DexPrototype.parameters_type.
+                try:
+                    param_size = struct.unpack_from("<I", dex_buf, p.parameters_off)[0]
+                    p_off = p.parameters_off + 4
+                    for _ in range(param_size):
+                        param_idxs.append(struct.unpack_from("<H", dex_buf, p_off)[0])
+                        p_off += 2
+                except struct.error:
+                    raise ValueError("bad type_list offset") from None
             protos_dump.append({
                 "idx": idx,
                 "shorty_idx": p.shorty_idx,
@@ -276,9 +280,13 @@ def dump_dex_primitives(dex_buf: bytes, dex_name: str, query_list: list[str]) ->
             for m in c.methods:
                 if m.code_offset != 0 and str(m.code_offset) not in code_items_dump:
                     off = m.code_offset
-                    registers_size, ins_size, outs_size, tries_size, debug_info_off, insns_size = struct.unpack_from(
-                        "<HHHHII", dex_buf, off
-                    )
+                    # Same guard as DexMethod.bytecode: a header past the end is a contract error.
+                    try:
+                        registers_size, ins_size, outs_size, tries_size, debug_info_off, insns_size = struct.unpack_from(
+                            "<HHHHII", dex_buf, off
+                        )
+                    except struct.error:
+                        raise ValueError("bad code_item offset") from None
                     insns_bytes = dex_buf[off + 16 : off + 16 + insns_size * 2]
                     code_items_dump[str(off)] = {
                         "method_idx": m.index,
@@ -311,12 +319,12 @@ def dump_dex_primitives(dex_buf: bytes, dex_name: str, query_list: list[str]) ->
                 raise ValueError("bad class_defs range")
             cls_obj = dex.get_class(q)
             get_class_dump.append({
-                "name": q,
+                "name": to_utf16_units(q),
                 "found": cls_obj is not None,
                 "class_idx": cls_obj.class_idx if cls_obj is not None else None,
             })
         except Exception as e:
-            get_class_dump.append({"name": q, "error": str(e)})
+            get_class_dump.append({"name": to_utf16_units(q), "error": str(e)})
     result["get_class"] = get_class_dump
 
     return result
@@ -418,12 +426,12 @@ def dump_apk_primitives(apk_path: Path, extra_queries: list[str] = None) -> dict
                 t_idx = apk_handler._find_type_idx(data, q_bytes)
                 is_def = apk_handler._dex_defines_class(data, q_bytes) if t_idx >= 0 else False
                 entry_defines.append({
-                    "name": q,
+                    "name": to_utf16_units(q),
                     "type_idx": t_idx,
                     "defined": is_def,
                 })
             except Exception as e:
-                entry_defines.append({"name": q, "error": str(e)})
+                entry_defines.append({"name": to_utf16_units(q), "error": str(e)})
         defines_dump[ename] = entry_defines
     result["apk.defines_class"] = defines_dump
 

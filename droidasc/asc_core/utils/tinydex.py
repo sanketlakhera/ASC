@@ -128,7 +128,10 @@ class DexString:
 class DexPrototype:
     def __init__(self, dex, proto_idx):
         offset = dex.header.prototypes[0] + proto_idx * 12
-        self.shorty_idx, self.return_type_idx, self.parameters_off = _STRUCT_III.unpack_from(dex.buf, offset)
+        try:
+            self.shorty_idx, self.return_type_idx, self.parameters_off = _STRUCT_III.unpack_from(dex.buf, offset)
+        except struct.error:
+            raise ValueError("bad proto_ids range") from None
         self.dex = dex
 
     @property
@@ -137,11 +140,17 @@ class DexPrototype:
             if self.parameters_off == 0:
                 self._parameters_type = []
             else:
-                size = _STRUCT_I.unpack_from(self.dex.buf, self.parameters_off)[0]
+                try:
+                    size = _STRUCT_I.unpack_from(self.dex.buf, self.parameters_off)[0]
+                except struct.error:
+                    raise ValueError("bad type_list offset") from None
                 params = []
                 off = self.parameters_off + 4
                 for _ in range(size):
-                    type_idx = _STRUCT_H.unpack_from(self.dex.buf, off)[0]
+                    try:
+                        type_idx = _STRUCT_H.unpack_from(self.dex.buf, off)[0]
+                    except struct.error:
+                        raise ValueError("bad type_list offset") from None
                     off += 2
                     params.append(self.dex.get_type(type_idx))
                 self._parameters_type = params
@@ -152,7 +161,10 @@ class DexField:
         self.index = field_idx
         self.dex = dex
         offset = dex.header.fields[0] + field_idx * 8
-        self.class_idx, self.type_idx, self.name_idx = _STRUCT_HHI.unpack_from(dex.buf, offset)
+        try:
+            self.class_idx, self.type_idx, self.name_idx = _STRUCT_HHI.unpack_from(dex.buf, offset)
+        except struct.error:
+            raise ValueError("bad field_ids range") from None
         self.access_flags = 0
         self.is_static = False
 
@@ -178,7 +190,10 @@ class DexMethod:
         self.index = method_idx
         self.dex = dex
         offset = dex.header.methods[0] + method_idx * 8
-        self.class_idx, self.proto_idx, self.name_idx = _STRUCT_HHI.unpack_from(dex.buf, offset)
+        try:
+            self.class_idx, self.proto_idx, self.name_idx = _STRUCT_HHI.unpack_from(dex.buf, offset)
+        except struct.error:
+            raise ValueError("bad method_ids range") from None
         self._bytecode = None
         self._code_off = 0
         self.access_flags = 0
@@ -218,7 +233,10 @@ class DexMethod:
         
         # Parse code_item
         off = self._code_off
-        registers_size, ins_size, outs_size, tries_size, debug_info_off, insns_size = _STRUCT_HHHHII.unpack_from(self.dex.buf, off)
+        try:
+            registers_size, ins_size, outs_size, tries_size, debug_info_off, insns_size = _STRUCT_HHHHII.unpack_from(self.dex.buf, off)
+        except struct.error:
+            raise ValueError("bad code_item offset") from None
         off += 16
         
         insns_bytes = self.dex.buf[off : off + insns_size * 2]
@@ -247,58 +265,85 @@ class DexClass:
     def _parse_class_data(self):
         if self._parsed:
             return
-        self._parsed = True
-        
         if self.class_data_off == 0:
+            self._parsed = True
             return
-            
+        # A corrupt class_data must fail on every call; marking it parsed up front
+        # used to leave the partial field/method lists behind for the next caller.
+        try:
+            self._parse_class_data_items()
+        except Exception:
+            self._fields = []
+            self._methods = []
+            raise
+        self._parsed = True
+
+    def _parse_class_data_items(self):
+        # DEX requires strictly increasing indices inside each list and a member in
+        # only one list of a pair. A repeat would alias one cached DexField/DexMethod
+        # (flags, code_off and list membership are shared per index), so it is
+        # rejected as "bad class_data" instead.
         data = self.dex.buf
         pos = self.class_data_off
         static_fields_size, c = read_uleb128_fast(data, pos); pos += c
         instance_fields_size, c = read_uleb128_fast(data, pos); pos += c
         direct_methods_size, c = read_uleb128_fast(data, pos); pos += c
         virtual_methods_size, c = read_uleb128_fast(data, pos); pos += c
-        
+
+        static_idxs = set() if instance_fields_size else None
         field_idx = 0
-        for _ in range(static_fields_size):
+        for i in range(static_fields_size):
             field_idx_diff, c = read_uleb128_fast(data, pos); pos += c
             field_idx += field_idx_diff
             access_flags, c = read_uleb128_fast(data, pos); pos += c
+            if i and not field_idx_diff:
+                raise ValueError("bad class_data")
             f = self.dex.get_field(field_idx)
             f.access_flags = access_flags
             f.is_static = True
             self._fields.append(f)
-            
+            if static_idxs is not None:
+                static_idxs.add(field_idx)
+
         field_idx = 0
-        for _ in range(instance_fields_size):
+        for i in range(instance_fields_size):
             field_idx_diff, c = read_uleb128_fast(data, pos); pos += c
             field_idx += field_idx_diff
             access_flags, c = read_uleb128_fast(data, pos); pos += c
+            if (i and not field_idx_diff) or (static_idxs and field_idx in static_idxs):
+                raise ValueError("bad class_data")
             f = self.dex.get_field(field_idx)
             f.access_flags = access_flags
             f.is_static = False
             self._fields.append(f)
-            
+
+        direct_idxs = set() if virtual_methods_size else None
         method_idx = 0
-        for _ in range(direct_methods_size):
+        for i in range(direct_methods_size):
             method_idx_diff, c = read_uleb128_fast(data, pos); pos += c
             method_idx += method_idx_diff
             access_flags, c = read_uleb128_fast(data, pos); pos += c
             code_off, c = read_uleb128_fast(data, pos); pos += c
-            
+            if i and not method_idx_diff:
+                raise ValueError("bad class_data")
+
             m = self.dex.get_method(method_idx)
             m._code_off = code_off
             m.access_flags = access_flags
             m.is_direct = True
             self._methods.append(m)
-            
+            if direct_idxs is not None:
+                direct_idxs.add(method_idx)
+
         method_idx = 0
-        for _ in range(virtual_methods_size):
+        for i in range(virtual_methods_size):
             method_idx_diff, c = read_uleb128_fast(data, pos); pos += c
             method_idx += method_idx_diff
             access_flags, c = read_uleb128_fast(data, pos); pos += c
             code_off, c = read_uleb128_fast(data, pos); pos += c
-            
+            if (i and not method_idx_diff) or (direct_idxs and method_idx in direct_idxs):
+                raise ValueError("bad class_data")
+
             m = self.dex.get_method(method_idx)
             m._code_off = code_off
             m.access_flags = access_flags
