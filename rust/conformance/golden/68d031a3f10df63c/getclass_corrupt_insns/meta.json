@@ -1,11 +1,11 @@
 {
-  "query_id": "getclass_ads_google_api",
+  "query_id": "getclass_corrupt_insns",
   "command": "getclass",
   "args": [
-    "Lcom/google/android/gms/common/GoogleApiAvailability;"
+    "Lexample/Test;"
   ],
-  "corpus_name": "ads_solution",
-  "apk_sha256": "1ee7fafe1087ed5449a1eff865524c62c2516db1a308c3be550e7ea6006188a5",
+  "corpus_name": "fuzz_insns_overrun",
+  "apk_sha256": "68d031a3f10df63c44a1632b89bf58d42a90a65bc97fc0951845476fcd08e52d",
   "oracle_git_revision": "oracle-m1-5-g4da6bfd",
   "git_dirty": false,
   "diff_sha256": null,

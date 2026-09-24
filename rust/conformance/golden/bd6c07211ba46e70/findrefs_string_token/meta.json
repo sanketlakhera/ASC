@@ -7,7 +7,7 @@
   ],
   "corpus_name": "workload",
   "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
-  "oracle_git_revision": "oracle-m0-6-gb5db061",
+  "oracle_git_revision": "oracle-m1-5-g4da6bfd",
   "git_dirty": false,
   "diff_sha256": null,
   "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",

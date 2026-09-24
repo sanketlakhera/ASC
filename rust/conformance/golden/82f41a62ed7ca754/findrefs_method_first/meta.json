@@ -9,7 +9,7 @@
   ],
   "corpus_name": "stored",
   "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
-  "oracle_git_revision": "oracle-m0-6-gb5db061",
+  "oracle_git_revision": "oracle-m1-5-g4da6bfd",
   "git_dirty": false,
   "diff_sha256": null,
   "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",

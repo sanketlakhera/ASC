@@ -1,14 +1,12 @@
 {
-  "query_id": "findrefs_field_static",
+  "query_id": "findrefs_method_corrupt_insns",
   "command": "findrefs",
   "args": [
-    "field",
-    "SECOND",
-    "--class",
-    "Lexample/Statics;"
+    "method",
+    "first"
   ],
-  "corpus_name": "multidex",
-  "apk_sha256": "9cc9df0c1cb2b0fb0b26bca4d8c7c90c6a9cd10e1f92e3f6b58badb96117f491",
+  "corpus_name": "fuzz_insns_hang",
+  "apk_sha256": "6251aed19b2af99df56797fc35395d38239952bcf264a228f4e26e0e8a179e4f",
   "oracle_git_revision": "oracle-m1-5-g4da6bfd",
   "git_dirty": false,
   "diff_sha256": null,

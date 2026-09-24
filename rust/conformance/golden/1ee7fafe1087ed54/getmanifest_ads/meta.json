@@ -4,7 +4,7 @@
   "args": [],
   "corpus_name": "ads_solution",
   "apk_sha256": "1ee7fafe1087ed5449a1eff865524c62c2516db1a308c3be550e7ea6006188a5",
-  "oracle_git_revision": "oracle-m0-6-gb5db061",
+  "oracle_git_revision": "oracle-m1-5-g4da6bfd",
   "git_dirty": false,
   "diff_sha256": null,
   "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
