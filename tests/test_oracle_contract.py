@@ -297,6 +297,25 @@ class TinydexCorruptionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, '^bad code_item offset$'):
             cls.methods[0].bytecode
 
+    def test_insns_past_end_is_bad_code_item_offset(self):
+        # insns_size far past the buffer: bytecode used to return a truncated
+        # body, and the findrefs locator filled ~5e8 buckets and never finished.
+        raw = bytearray(make_dex())
+        code_off = struct.unpack_from('<H', raw, self.M0_CODE_OFF)[0]
+        code_off = (code_off & 0x7F) | ((code_off >> 8) << 7)
+        struct.pack_into('<I', raw, code_off + 12, 0x77777777)
+        cls = self.parse(raw).classes[0]
+        cls._parse_class_data()
+        with self.assertRaisesRegex(ValueError, '^bad code_item offset$'):
+            cls.methods[0].bytecode
+        with tempfile.NamedTemporaryFile(suffix='.apk') as f:
+            with zipfile.ZipFile(f, 'w') as zf:
+                zf.writestr('classes.dex', bytes(raw))
+            f.flush()
+            result = run_cli('findrefs', f.name, 'method', 'first')
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('Error: bad code_item offset', result.stderr)
+
     def test_truncated_type_list_is_bad_type_list_offset(self):
         raw = bytearray(make_dex())
         protos_off = struct.unpack_from('<I', raw, 0x4C)[0]

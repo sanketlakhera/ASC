@@ -381,14 +381,14 @@ impl<'a> Dex<'a> {
         let debug_info_off = word(8)?;
         let insns_size = word(12)?;
 
-        // Python slices `buf[off + 16 : off + 16 + insns_size * 2]`, which clamps
-        // silently at the buffer end; only the 16-byte header is a contract error.
-        let after_header = self
+        // insns running past the end are as corrupt as a header past the end
+        // (oracle: tinydex `bytecode` and `InsnLocator._encoded_method_parse`).
+        let insns_len = (insns_size as usize).saturating_mul(2);
+        let insns_bytes = self
             .buf
             .get(code_off.saturating_add(16)..)
-            .unwrap_or_default();
-        let insns_len = (insns_size as usize).saturating_mul(2);
-        let insns_bytes = after_header.get(..insns_len).unwrap_or(after_header);
+            .and_then(|rest| rest.get(..insns_len))
+            .ok_or(AscError::BadCodeItemOffset)?;
 
         Ok(CodeItemInfo {
             registers_size,

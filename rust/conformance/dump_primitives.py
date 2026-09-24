@@ -287,6 +287,8 @@ def dump_dex_primitives(dex_buf: bytes, dex_name: str, query_list: list[str]) ->
                         )
                     except struct.error:
                         raise ValueError("bad code_item offset") from None
+                    if off + 16 + insns_size * 2 > len(dex_buf):
+                        raise ValueError("bad code_item offset")
                     insns_bytes = dex_buf[off + 16 : off + 16 + insns_size * 2]
                     code_items_dump[str(off)] = {
                         "method_idx": m.index,

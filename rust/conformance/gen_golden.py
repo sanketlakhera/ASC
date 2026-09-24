@@ -218,6 +218,20 @@ def define_queries():
             "corpus": ["multidex"],
             "args": ["field", "SECOND", "--class", "Lexample/Statics;"],
         },
+        # corrupt code_item: insns past the end hung findrefs (M0 sweep, 44 cases)
+        # and leaked struct.error from androguard through getclass
+        {
+            "id": "findrefs_method_corrupt_insns",
+            "command": "findrefs",
+            "corpus": ["fuzz_insns_overrun", "fuzz_insns_hang"],
+            "args": ["method", "first"],
+        },
+        {
+            "id": "getclass_corrupt_insns",
+            "command": "getclass",
+            "corpus": ["fuzz_insns_overrun"],
+            "args": ["Lexample/Test;"],
+        },
         # getmanifest queries
         {
             "id": "getmanifest_stored",

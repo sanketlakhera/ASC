@@ -238,7 +238,10 @@ class DexMethod:
         except struct.error:
             raise ValueError("bad code_item offset") from None
         off += 16
-        
+        # insns running past the end are as corrupt as a header past the end;
+        # a silent slice here used to hand the rebuild a truncated code_item.
+        if off + insns_size * 2 > len(self.dex.buf):
+            raise ValueError("bad code_item offset")
         insns_bytes = self.dex.buf[off : off + insns_size * 2]
         self._bytecode = list(insns_bytes)
         return self._bytecode

@@ -69,12 +69,14 @@ class InsnLocator(BaseLocator):
         if pos == 0:
             # code off == 0 means no method body, we dont need to locate it, ignore
             return
-        # No per-method bounds check here: this runs once per method and a
-        # branch on this path costs ~3% on the gated insn_locator benchmark.
         # A code_off past the end raises struct.error, which parse() maps to
-        # the contract message once per DEX.
+        # the contract message once per DEX. insns running past the end must be
+        # checked here: a corrupt insns_size (up to 2**32) would otherwise fill
+        # hundreds of millions of buckets below and never finish.
         insn_size = _STRUCT_I.unpack_from(data, pos + 12)[0]
         insn_off = pos + 16
+        if insn_off + insn_size * 2 > len(data):
+            raise ValueError("bad code_item offset")
         insn_maps = self.insn_maps
         # need to declare why do this... checkout the diagram in file head
         insn_bucket_start = insn_off >> 4
