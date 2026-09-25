@@ -3,6 +3,8 @@
 
 Usage:
   python rust/conformance/check.py --bin path/to/asc [--golden-dir golden] [--corpus-dir corpus]
+  python rust/conformance/check.py --primitives --bin path/to/asc   # M1 primitive dumps
+  python rust/conformance/check.py --findrefs --bin path/to/asc     # M2 findrefs stage dumps
 """
 import argparse
 import difflib
@@ -18,11 +20,22 @@ ROOT = Path(__file__).resolve().parents[2]
 
 DEBUG_REGEX = re.compile(r"^\[DEBUG\].*$\n?", re.MULTILINE)
 SEP_REGEX = re.compile(r"^-{40,}.*$\n?", re.MULTILINE)
+# findrefs --debug lines carry timings and pids; keep their shape, not their values
+TIMING_LINE_REGEX = re.compile(r"^\[(?:DEBUG|APK)\].*$", re.MULTILINE)
+UNSUPPORTED_SYNTAX = "Error: unsupported pattern syntax"
 
 
-def clean_cli_output(text: str, is_debug: bool = False) -> str:
+def _text(raw: bytes) -> str:
+    # bytes as written, no newline translation: subprocess text mode would turn
+    # every "\r" into "\n" and hide a real difference
+    return raw.decode("utf-8", "surrogateescape")
+
+
+def clean_cli_output(text: str, is_debug: bool = False, command: str = "") -> str:
     if not is_debug:
         return text
+    if command == "findrefs":
+        return TIMING_LINE_REGEX.sub(lambda m: re.sub(r"\d+", "N", m.group(0)), text)
     text = DEBUG_REGEX.sub("", text)
     text = SEP_REGEX.sub("", text)
     return text
@@ -40,9 +53,10 @@ def run_candidate(bin_path: Path, apk_path: Path, command: str, args: list, outp
     if output_file:
         cmd.extend(["-o", str(output_file)])
 
-    res = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
-    is_debug = "--debug" in args
-    return res.returncode, clean_cli_output(res.stdout, is_debug), res.stderr
+    res = subprocess.run(cmd, cwd=ROOT, capture_output=True)
+    # any abbreviation argparse accepts for --debug (--deb, --de, ...)
+    is_debug = any(len(a) > 3 and "--debug".startswith(a) for a in args)
+    return res.returncode, clean_cli_output(_text(res.stdout), is_debug, command), _text(res.stderr)
 
 
 def resolve_corpus_apk(cname: str, corpus_dir: Path) -> Path:
@@ -59,7 +73,8 @@ def resolve_corpus_apk(cname: str, corpus_dir: Path) -> Path:
     return corpus_dir / f"fixture_{cname}.apk"
 
 
-def check_conformance(bin_path: Path, golden_dir: Path, corpus_dir: Path, check_dex: bool = False):
+def check_conformance(bin_path: Path, golden_dir: Path, corpus_dir: Path, check_dex: bool = False,
+                      only: str = None):
     manifest_path = golden_dir / "manifest.json"
     if not manifest_path.exists():
         print(f"Error: Golden manifest not found at {manifest_path}. Run gen_golden.py first.", file=sys.stderr)
@@ -67,6 +82,8 @@ def check_conformance(bin_path: Path, golden_dir: Path, corpus_dir: Path, check_
 
     with open(manifest_path, "r", encoding="utf-8") as f:
         cases = json.load(f)
+    if only:
+        cases = [c for c in cases if c["meta"]["command"] == only]
 
     print(f"Running conformance checks for binary: {bin_path}")
     print(f"Total golden cases to verify: {len(cases)}\n")
@@ -83,8 +100,8 @@ def check_conformance(bin_path: Path, golden_dir: Path, corpus_dir: Path, check_
         command = meta["command"]
         args = meta["args"]
 
-        expected_stdout = (target_dir / "stdout.txt").read_text(encoding="utf-8")
-        expected_stderr = (target_dir / "stderr.txt").read_text(encoding="utf-8")
+        expected_stdout = _text((target_dir / "stdout.txt").read_bytes())
+        expected_stderr = _text((target_dir / "stderr.txt").read_bytes())
         expected_rc = int((target_dir / "exit_code.txt").read_text(encoding="utf-8").strip())
 
         apk_file = resolve_corpus_apk(cname, corpus_dir)
@@ -107,6 +124,19 @@ def check_conformance(bin_path: Path, golden_dir: Path, corpus_dir: Path, check_
         temp_out = target_dir / "candidate_output.tmp"
         rc, stdout, stderr = run_candidate(bin_path, apk_file, command, args, output_file=temp_out if (target_dir / "output.file").exists() else None)
 
+        # Documented divergences (gen_golden.findrefs_queries): the golden's
+        # expectation is narrowed, never dropped.
+        if meta.get("rust_expect") == "unsupported_syntax":
+            expected_rc, expected_stdout = 1, ""
+            if stderr.startswith(UNSUPPORTED_SYNTAX) and stderr.endswith("\n") and stderr.count("\n") == 1:
+                expected_stderr = stderr
+            else:
+                expected_stderr = UNSUPPORTED_SYNTAX + ": <pattern error>\n"
+        elif meta.get("error_prefix_only") and expected_stderr.startswith("Error: ") and stderr.startswith("Error: "):
+            expected_stderr = stderr
+        elif meta.get("exit_code_only"):
+            expected_stdout, expected_stderr = stdout, stderr
+
         divergences = []
         if rc != expected_rc:
             divergences.append(f"Exit code mismatch: expected {expected_rc}, got {rc}")
@@ -117,9 +147,11 @@ def check_conformance(bin_path: Path, golden_dir: Path, corpus_dir: Path, check_
         if stderr != expected_stderr:
             divergences.append(f"Stderr divergence:\n{diff_text(expected_stderr, stderr, 'stderr')}")
 
-        if (target_dir / "output.file").exists() and temp_out.exists():
-            expected_out_file = (target_dir / "output.file").read_text(encoding="utf-8", errors="replace")
-            actual_out_file = temp_out.read_text(encoding="utf-8", errors="replace")
+        if meta.get("rust_expect") or meta.get("exit_code_only"):
+            temp_out.unlink(missing_ok=True)
+        elif (target_dir / "output.file").exists() and temp_out.exists():
+            expected_out_file = _text((target_dir / "output.file").read_bytes())
+            actual_out_file = _text(temp_out.read_bytes())
             if actual_out_file != expected_out_file:
                 divergences.append(f"Output file mismatch:\n{diff_text(expected_out_file, actual_out_file, 'output_file')}")
             temp_out.unlink(missing_ok=True)
@@ -298,6 +330,87 @@ def check_primitives(bin_path: Path, golden_dir: Path, corpus_dir: Path):
     sys.exit(0)
 
 
+def normalize_findrefs_divergences(expected, actual):
+    """Queries whose pattern only Python accepts (dump_findrefs.PYTHON_ONLY_PATTERNS)
+    must fail in the candidate with an unsupported-syntax error once Python got
+    as far as compiling it (its record has "located"); both records are then
+    reduced to that fact before the tree comparison. When Python failed first
+    (a corrupt string table), the records must match as they are."""
+    for e_dex, a_dex in zip(expected.get("dex", []), actual.get("dex", [])):
+        e_queries, a_queries = e_dex.get("queries"), a_dex.get("queries")
+        if not isinstance(e_queries, list) or not isinstance(a_queries, list):
+            continue
+        for i, (e_q, a_q) in enumerate(zip(e_queries, a_queries)):
+            if e_q.get("expect_rust") != "unsupported_syntax":
+                continue
+            if "located" not in e_q:
+                del e_q["expect_rust"]
+                continue
+            refused = str(a_q.get("error", "")).startswith("unsupported pattern syntax")
+            e_queries[i] = {"kind": e_q["kind"], "query": e_q["query"], "unsupported_syntax": True}
+            a_queries[i] = {"kind": a_q.get("kind"), "query": a_q.get("query"), "unsupported_syntax": refused}
+
+
+def check_findrefs(bin_path: Path, golden_dir: Path, corpus_dir: Path):
+    print(f"Running findrefs stage conformance checks for binary: {bin_path}")
+    golden_apk_hashes = sorted(p.parent.name for p in golden_dir.glob("*/findrefs") if p.is_dir())
+    if not golden_apk_hashes:
+        print(f"Error: No findrefs goldens found in {golden_dir}. Run gen_golden.py first.", file=sys.stderr)
+        sys.exit(1)
+
+    corpus_map = {}
+    for apk_file in list(corpus_dir.glob("*.apk")) + [ROOT / "Ads Solution June.apk"]:
+        if apk_file.exists():
+            corpus_map[hashlib.sha256(apk_file.read_bytes()).hexdigest()[:16]] = apk_file
+
+    passed = failed = 0
+    first_divergence = None
+    total = len(golden_apk_hashes)
+    for idx, apk_hash in enumerate(golden_apk_hashes):
+        expected_file = golden_dir / apk_hash / "findrefs" / "findrefs.json.gz"
+        apk_file = corpus_map.get(apk_hash)
+        if not expected_file.exists() or apk_file is None:
+            print(f"[{idx+1}/{total}] SKIP: {apk_hash} (golden or corpus APK missing)")
+            continue
+        if str(bin_path).endswith(".py"):
+            cmd = [sys.executable, str(bin_path), str(apk_file)]
+        else:
+            cmd = [str(bin_path), "dump-findrefs", str(apk_file)]
+        res = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
+        divergence = None
+        if res.returncode != 0:
+            divergence = f"Candidate process exited with {res.returncode}. Stderr:\n{res.stderr}"
+        else:
+            try:
+                actual_json = json.loads(res.stdout)
+            except json.JSONDecodeError as e:
+                divergence = f"Failed to parse candidate JSON output: {e}\nRaw output:\n{res.stdout[:500]}"
+            else:
+                expected_json = json.loads(gzip.decompress(expected_file.read_bytes()).decode("utf-8"))
+                normalize_findrefs_divergences(expected_json, actual_json)
+                divergence = diff_json(expected_json, actual_json)
+        if divergence:
+            failed += 1
+            print(f"[{idx+1}/{total}] FAIL: findrefs stages for {apk_file.name}")
+            if first_divergence is None:
+                first_divergence = (apk_file.name, apk_hash, divergence)
+        else:
+            passed += 1
+            print(f"[{idx+1}/{total}] PASS: findrefs stages for {apk_file.name}")
+
+    print("\n" + "=" * 50)
+    print(f"Findrefs Stage Conformance Results: {passed} passed, {failed} failed (Total: {passed + failed})")
+    print("=" * 50)
+    if first_divergence:
+        name, apk_hash, divergence = first_divergence
+        print("\nFIRST DIVERGENCE DETAILS:")
+        print(f"APK: {name} (hash: {apk_hash})")
+        print(divergence)
+        sys.exit(1)
+    print("\nAll checked findrefs stage goldens passed key-for-key!")
+    sys.exit(0)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Check candidate binary against conformance goldens.")
     parser.add_argument("--bin", required=True, help="Path to candidate binary to test")
@@ -305,12 +418,18 @@ def main():
     parser.add_argument("--corpus-dir", default=str(ROOT / "rust" / "conformance" / "corpus"), help="Path to corpus directory")
     parser.add_argument("--check-dex", action="store_true", help="Also verify Level 2 rebuilt DEX SHA256")
     parser.add_argument("--primitives", action="store_true", help="Verify Level 3 primitive dumps")
+    parser.add_argument("--findrefs", action="store_true", help="Verify Level 3 findrefs stage dumps")
+    parser.add_argument("--only", choices=("findrefs", "getclass", "getmanifest"),
+                        help="CLI goldens of one command only (the Rust CLI grows a command per milestone)")
     args = parser.parse_args()
 
-    if args.primitives:
+    if args.findrefs:
+        check_findrefs(Path(args.bin), Path(args.golden_dir), Path(args.corpus_dir))
+    elif args.primitives:
         check_primitives(Path(args.bin), Path(args.golden_dir), Path(args.corpus_dir))
     else:
-        check_conformance(Path(args.bin), Path(args.golden_dir), Path(args.corpus_dir), check_dex=args.check_dex)
+        check_conformance(Path(args.bin), Path(args.golden_dir), Path(args.corpus_dir), check_dex=args.check_dex,
+                          only=args.only)
 
 
 if __name__ == "__main__":

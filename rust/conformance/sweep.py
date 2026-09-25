@@ -21,6 +21,10 @@ Usage (from the repository root, in the oracle environment):
 --root runs the sweep against another checkout (e.g. a worktree at oracle-m0).
 --save-dir writes every TIMEOUT and LEAK input as <label>.dex for reuse as
 fuzz seeds or corpus fixtures.
+--bin also runs every findrefs case through a candidate CLI (`asc findrefs`
+on a stored APK holding the input as classes.dex) and compares its exit code,
+stdout and stderr with what Python's CLI prints for the same outcome; the
+findrefs rows then carry a RUST-DIFF count (M2 plan section 7).
 """
 import argparse
 import copy
@@ -28,6 +32,7 @@ import os
 import random
 import re
 import signal
+import subprocess
 import sys
 import tempfile
 import zipfile
@@ -44,6 +49,7 @@ parser.add_argument("--u32-mutations", type=int, default=30, help="4-byte mutati
 parser.add_argument("--findrefs-timeout", type=int, default=3)
 parser.add_argument("--getclass-timeout", type=int, default=5)
 parser.add_argument("--no-getclass", action="store_true", help="findrefs only (no androguard needed)")
+parser.add_argument("--bin", help="candidate CLI to compare findrefs cases against")
 args = parser.parse_args()
 
 ROOT = Path(args.root).resolve()
@@ -67,6 +73,7 @@ def is_contract(exc):
     return type(exc) is ValueError and any(c.match(str(exc)) for c in CONTRACT)
 
 
+# (kind, in-process query, the same query as CLI arguments)
 QUERIES = [
     ("string", {"string": "token"}),
     ("type", {"type": "Lexample/Test;"}),
@@ -75,6 +82,15 @@ QUERIES = [
     ("method", {"method": {"class": ["example", False], "method": None}}),
     ("field", {"field": {"class": ["Lexample/Statics;", True], "field": "SECOND"}}),
     ("field", {"field": {"class": None, "field": "SECOND"}}),
+]
+CLI_ARGS = [
+    ["string", "token"],
+    ["type", "Lexample/Test;"],
+    ["method", "first", "--class", "Lexample/Test;"],
+    ["method", "first"],
+    ["method", "--class", "example", "--fuzzy-class"],
+    ["field", "SECOND", "--class", "Lexample/Statics;"],
+    ["field", "SECOND"],
 ]
 GETCLASS_TARGETS = ("Lexample/Test;", "Lexample/Statics;")
 
@@ -91,8 +107,10 @@ signal.signal(signal.SIGALRM, _alarm)
 
 
 def run_findrefs(buf, ft, q):
+    lines = []
     for name, logical in iter_logical_dex_buffers("classes.dex", buf):
-        AscHandler().findrefs(name, logical, ft, copy.deepcopy(q))
+        lines.extend(AscHandler().findrefs(name, logical, ft, copy.deepcopy(q)))
+    return lines
 
 
 def run_getclass(buf, cls):
@@ -146,7 +164,7 @@ def innermost_droidasc_frame(tb):
 def attempt(fn, seconds):
     signal.alarm(seconds)
     try:
-        fn()
+        attempt.result = fn()
         return None, ""
     except BaseException as e:  # noqa: BLE001 - classifying every outcome is the point
         return e, innermost_droidasc_frame(e.__traceback__) if isinstance(e, Timeout) else ""
@@ -154,10 +172,43 @@ def attempt(fn, seconds):
         signal.alarm(0)
 
 
+rust_diffs = Counter()
+rust_examples = {}
+BIN_APK = Path(tempfile.mkdtemp()) / "sweep.apk"
+
+
+def compare_bin(path, label, buf, cli_args, exc):
+    """The candidate CLI on the same input: Python's CLI prints the lines and
+    exits 0, or prints "Error: <message>" and exits 1."""
+    if exc is None:
+        lines = attempt.result
+        # the CLI writes str with errors="replace": a lone surrogate prints as "?"
+        text = "\n".join(lines) + "\n" if lines else ""
+        text = text.encode("utf-8", "replace").decode("utf-8")
+        expected = (0, text, "")
+    elif is_contract(exc):
+        expected = (1, "", f"Error: {exc}\n")
+    else:
+        return  # a Python leak or timeout has no contract to compare with
+    with zipfile.ZipFile(BIN_APK, "w", zipfile.ZIP_STORED) as zf:
+        zf.writestr("classes.dex", buf)
+    # bytes, not text mode: text mode turns "\r" into "\n"
+    res = subprocess.run([args.bin, "findrefs", str(BIN_APK), "--threads", "1", *cli_args],
+                         capture_output=True, timeout=60)
+    got = (res.returncode, res.stdout.decode("utf-8", "surrogateescape"),
+           res.stderr.decode("utf-8", "surrogateescape"))
+    if got != expected:
+        rust_diffs[path] += 1
+        rust_examples.setdefault(path, (label, expected, got))
+
+
 def exercise(label, buf):
-    for ft, q in QUERIES:
+    for (ft, q), cli_args in zip(QUERIES, CLI_ARGS):
+        attempt.result = None
         exc, where = attempt(lambda: run_findrefs(buf, ft, q), args.findrefs_timeout)
         record(f"findrefs/{ft}", label, buf, exc, where)
+        if args.bin:
+            compare_bin(f"findrefs/{ft}", label, buf, cli_args, exc)
     if not args.no_getclass:
         for cls in GETCLASS_TARGETS:
             exc, where = attempt(lambda: run_getclass(buf, cls), args.getclass_timeout)
@@ -203,8 +254,15 @@ for path in sorted(results):
         lines.append(f"  {kind:8} {n:6}  {t:12} {msg!r:70}  e.g. {examples[(path, key)]}")
     lines.append("")
 lines.append("totals: " + ", ".join(f"{k} {v}" for k, v in sorted(totals.items())))
+if args.bin:
+    lines.append(f"candidate {args.bin}: RUST-DIFF {sum(rust_diffs.values())}")
+    for path in sorted(rust_diffs):
+        label, expected, got = rust_examples[path]
+        lines.append(f"  {path}: {rust_diffs[path]}, e.g. {label}")
+        lines.append(f"    python: {expected!r:.300}")
+        lines.append(f"    rust:   {got!r:.300}")
 report = "\n".join(lines) + "\n"
 print(report)
 if args.report:
     Path(args.report).write_text(report)
-sys.exit(1 if totals["LEAK"] or totals["TIMEOUT"] else 0)
+sys.exit(1 if totals["LEAK"] or totals["TIMEOUT"] or sum(rust_diffs.values()) else 0)

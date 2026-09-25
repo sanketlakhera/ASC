@@ -6,6 +6,8 @@ Generates:
   vectors/sleb128.json
   vectors/mutf8.json
   vectors/zip_names.json
+  vectors/insn_verify.json   (M2: INSN_VERIFY on 20,000 instruction streams)
+  vectors/patterns.json      (M2: Python re outcome for findrefs patterns)
 """
 import itertools
 import json
@@ -239,25 +241,114 @@ def gen_zip_names_vectors() -> list[dict]:
     return cases
 
 
+def gen_insn_verify_vectors(count: int = 20000) -> list[dict]:
+    """Python's INSN_VERIFY verdict, both compiled forms, per stream. Its own
+    RNG, so the other vector files do not move when this one changes."""
+    sys.path.insert(0, str(ROOT / "rust" / "conformance"))
+    import insn_streams
+
+    rng = random.Random(4242)
+    patterns = insn_streams.compile_patterns()
+    cases = []
+    for _ in range(count):
+        buf, start, end = insn_streams.stream(rng)
+        atomic, plain = insn_streams.verdicts(patterns, buf, start, end)
+        cases.append({"hex": buf.hex(), "start": start, "end": end, "atomic": atomic, "plain": plain})
+    return cases
+
+
+# Hand-picked patterns for vectors/patterns.json, on top of the random ones:
+# each probes a place where Python re and regex::bytes read syntax differently.
+PATTERN_PROBES = [
+    "token", "tok.n", "^tok", "(?i)TOKEN", "[a-c]reate", "token.", "a{", "a{,3}", "x{}", "{1", "e{1,}",
+    "a{2,1}", "\\<", "[a&&b]", "[a--b]", "[a~~b]", "[[a]", "[]a]", "[^]a]", "(?<name>a)", "(?P<name>a)",
+    "(?P<1a>x)", "a(?i)b", "(?i)(?s)x", "a|(?i)b", "\\x{41}", "\\x4", "\\x41", "\\u0041", "\\z", "\\Z",
+    "\\A", "\\b", "[\\b]", "\\0", "\\012", "\\1", "(a)\\1", "\\8", "[\\8]", "\\777", "(?x) t o k", "(?x)[ ]",
+    "(?x)a#c\nb", "(?#c)tok", "tok(?#c", "^*", "a**", "a*?", "a++", "a{2}+", "(?>a)", "(?=t)", "(?<=t)oken",
+    "(?(1)a)", "(a)?(?(1)b|c)", "(?L)a", "(?u)a", "(?aL)a", "(?t)a", "(?t)a*", "(?-i:a)", "(?i-i:a)", "(?a-a:x)",
+    "(", ")", "(?", "(?P", "[", "a\\", "|token", "token|", "x*|t", "t|x*", "(?:)", "()", "\u00e9", "[\u00e9]",
+    "\U0001F600", "\x00", ".", "$", "\\$", "tok\n", "(?m)^L", "(?m)n$", "\\d+", "\\w+", "\\s", "[^\\W\\d]",
+]
+
+
+def gen_pattern_vectors(count: int = 3000) -> dict:
+    """Python's outcome for each pattern over a fixed haystack: its re.error
+    (or other exception) text, or the first-NUL-after-match-end positions.
+    The haystack is make_dex()'s string_data plus some real-looking strings.
+    Random patterns can backtrack for hours (`.*.*.*x`); one that takes more
+    than a second in Python is left out."""
+    import re as _re
+    import signal as _signal
+    import warnings as _warnings
+
+    def _timeout(*_):
+        raise TimeoutError
+
+    _signal.signal(_signal.SIGALRM, _timeout)
+    sys.path.insert(0, str(ROOT / "tests"))
+    sys.path.insert(0, str(ROOT / "rust" / "conformance"))
+    from regex_differential import Gen
+    from droidasc.asc_core.utils.mutf8 import encode_mutf8
+
+    words = [b"Lexample/Test;", b"Ljava/lang/Object;", b"V", b"first", b"second", b"token", b"create",
+             b"onCreate", b"View", b"setView", b"Landroid/view/View;", b"a{b}", b"x{1,2}", b"<init>", b"-x",
+             b"tok\xc0\x80en", b"caf\xc3\xa9", b"\xed\xa0\xbd\xed\xb8\x80", b"line\nbreak", b"a&&b", b"[x]"]
+    hay = b"".join(bytes([len(w)]) + w + b"\0" for w in words)
+    rng = random.Random(777)
+    patterns = list(PATTERN_PROBES)
+    while len(patterns) < count:
+        patterns.append(Gen(rng).pattern())
+    cases = []
+    _warnings.simplefilter("ignore")
+    for text in patterns:
+        raw = encode_mutf8(text)
+        try:
+            compiled = _re.compile(raw)
+        except Exception as e:
+            cases.append({"pattern": to_utf16_units(text), "error": str(e)})
+            continue
+        nuls = set()
+        _signal.setitimer(_signal.ITIMER_REAL, 1.0)
+        try:
+            for m in compiled.finditer(hay):
+                n = hay.find(b"\0", m.end())
+                if n >= 0:
+                    nuls.add(n)
+        except TimeoutError:
+            continue
+        finally:
+            _signal.setitimer(_signal.ITIMER_REAL, 0)
+        cases.append({"pattern": to_utf16_units(text), "nuls": sorted(nuls)})
+    return {"haystack_hex": hay.hex(), "cases": cases}
+
+
 def main():
     out_dir = ROOT / "rust" / "conformance" / "vectors"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    print("Generating vectors/uleb128.json...")
+    print("Generating vectors/uleb128.json...", flush=True)
     uleb_cases = gen_uleb128_vectors()
     (out_dir / "uleb128.json").write_text(json.dumps(uleb_cases, indent=2), encoding="utf-8")
 
-    print("Generating vectors/sleb128.json...")
+    print("Generating vectors/sleb128.json...", flush=True)
     sleb_cases = gen_sleb128_vectors()
     (out_dir / "sleb128.json").write_text(json.dumps(sleb_cases, indent=2), encoding="utf-8")
 
-    print("Generating vectors/mutf8.json...")
+    print("Generating vectors/mutf8.json...", flush=True)
     mutf8_cases = gen_mutf8_vectors()
     (out_dir / "mutf8.json").write_text(json.dumps(mutf8_cases, indent=2), encoding="utf-8")
 
-    print("Generating vectors/zip_names.json...")
+    print("Generating vectors/zip_names.json...", flush=True)
     zip_cases = gen_zip_names_vectors()
     (out_dir / "zip_names.json").write_text(json.dumps(zip_cases, indent=2), encoding="utf-8")
+
+    print("Generating vectors/insn_verify.json...", flush=True)
+    insn_cases = gen_insn_verify_vectors()
+    (out_dir / "insn_verify.json").write_text(json.dumps(insn_cases, separators=(",", ":")), encoding="utf-8")
+
+    print("Generating vectors/patterns.json...", flush=True)
+    pattern_cases = gen_pattern_vectors()
+    (out_dir / "patterns.json").write_text(json.dumps(pattern_cases, separators=(",", ":")), encoding="utf-8")
 
     print("Vector generation complete!")
 

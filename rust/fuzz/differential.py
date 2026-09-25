@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Differential check: Python primitive dump vs `asc dump-primitives` on fuzz inputs.
+"""Differential check: a Python stage dump vs the matching `asc dump-*` on fuzz inputs.
 
 Each input is wrapped as `classes.dex` in a stored APK, dumped by both sides, and the
 parsed JSON trees compared. The fuzzers look for panics; this looks for inputs the
 Rust side accepts or rejects differently from the oracle.
 
-Usage: differential.py --bin ../target/release/asc [--limit N] DIR_OR_FILE...
+  --dump primitives   dump_primitives.py vs `asc dump-primitives` (M1, default)
+  --dump findrefs     dump_findrefs.py   vs `asc dump-findrefs`   (M2)
+
+Usage: differential.py --bin ../target/release/asc [--dump findrefs] [--limit N] DIR_OR_FILE...
 """
 
 import argparse
@@ -20,6 +23,13 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "rust" / "conformance"))
 from dump_primitives import dump_apk_primitives  # noqa: E402
+from dump_findrefs import dump_apk_findrefs  # noqa: E402
+from check import normalize_findrefs_divergences  # noqa: E402
+
+DUMPS = {
+    "primitives": (dump_apk_primitives, "dump-primitives"),
+    "findrefs": (dump_apk_findrefs, "dump-findrefs"),
+}
 
 
 def first_diff(a, b, path="$"):
@@ -48,6 +58,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--bin", required=True)
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--dump", choices=sorted(DUMPS), default="primitives")
     ap.add_argument("inputs", nargs="+")
     args = ap.parse_args()
     # DEX strings may hold lone surrogates; never let reporting crash the run.
@@ -60,6 +71,7 @@ def main():
     if args.limit:
         files = files[: args.limit]
 
+    dump_python, subcommand = DUMPS[args.dump]
     diffs = 0
     with tempfile.TemporaryDirectory() as tmp:
         for n, f in enumerate(files, 1):
@@ -67,13 +79,16 @@ def main():
             apk = Path(tmp) / f"input{n}.apk"
             with zipfile.ZipFile(apk, "w", zipfile.ZIP_STORED) as z:
                 z.writestr("classes.dex", f.read_bytes())
-            expected = json.loads(json.dumps(dump_apk_primitives(apk), sort_keys=True))
-            res = subprocess.run([args.bin, "dump-primitives", str(apk)], capture_output=True, text=True)
+            expected = json.loads(json.dumps(dump_python(apk), sort_keys=True))
+            res = subprocess.run([args.bin, subcommand, str(apk)], capture_output=True, text=True)
             if res.returncode != 0:
                 diffs += 1
                 print(f"CRASH {f.name}: exit {res.returncode}: {res.stderr.strip()[:300]}")
                 continue
-            d = first_diff(expected, json.loads(res.stdout))
+            actual = json.loads(res.stdout)
+            if args.dump == "findrefs":
+                normalize_findrefs_divergences(expected, actual)
+            d = first_diff(expected, actual)
             if d:
                 diffs += 1
                 path, py, rs = d

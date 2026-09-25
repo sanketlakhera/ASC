@@ -4,8 +4,11 @@
 Runs the Python oracle against the corpus and generates multi-tier golden records:
   Level 1 (CLI): Raw stdout, stderr, exit_code, and -o output files.
   Level 2 (DEX): Rebuilt minimal DEX bytes and SHA-256 for getclass queries.
+  Level 3 (stages): per corpus APK, primitives/primitives.json.gz (M1,
+                    dump_primitives.py) and findrefs/findrefs.json.gz (M2,
+                    dump_findrefs.py).
 
-Note: Level 3 (Primitive JSON dumps for DAD AST and SSA forms) is scheduled for M5.
+Note: stage dumps for DAD AST and SSA forms are scheduled for M5.
 
 Usage:
   uv run --python 3.12 --with "androguard==4.1.3" python rust/conformance/gen_golden.py
@@ -28,11 +31,14 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tests"))
 sys.path.insert(0, str(ROOT / "rust" / "conformance"))
 
-from dex_fixture import make_dex, make_static_field_dex, make_dex041_container, make_axml, DEFAULT_STRINGS
+from dex_fixture import (make_dex, make_static_field_dex, make_dex041_container, make_axml, DEFAULT_STRINGS,
+                         make_slow_insns_overrun_dex, make_fast_bad_string_ids_dex)
 from droidasc.asc_core.utils.mutf8 import encode_mutf8
 from droidasc.asc_core.core.dex.dex_manager import DexManager
 from droidasc.asc_client.apk_handler import ApkHandler
 from dump_primitives import dump_apk_primitives
+from dump_findrefs import dump_apk_findrefs
+from droidasc.asc_core.utils.tinydex import DEX, DexField, DexMethod
 try:
     import androguard
 except Exception:
@@ -40,6 +46,8 @@ except Exception:
 
 DEBUG_REGEX = re.compile(r"^\[DEBUG\].*$\n?", re.MULTILINE)
 SEP_REGEX = re.compile(r"^-{40,}.*$\n?", re.MULTILINE)
+# findrefs --debug lines carry timings and pids; keep their shape, not their values
+TIMING_LINE_REGEX = re.compile(r"^\[(?:DEBUG|APK)\].*$", re.MULTILINE)
 
 
 def sha256_file(path: Path) -> str:
@@ -180,6 +188,27 @@ def build_corpus(corpus_dir: Path) -> dict:
             _write_entry(zf, "classes.dex", raw_dex[:trunc], zipfile.ZIP_STORED)
         corpus[cname] = apk_trunc
 
+    # 8. findrefs error order across entries (M2 F3). Entry order is ascending
+    # compressed size; one failing entry is slow (48 MB of zeros to inflate),
+    # the other fails at once. The error printed is the first in entry order.
+    for cname, entries in (
+        ("error_order_slow_first", [make_slow_insns_overrun_dex(), make_fast_bad_string_ids_dex()]),
+        ("error_order_fast_first", [make_fast_bad_string_ids_dex(padding=8 << 10), make_slow_insns_overrun_dex()]),
+    ):
+        apk_order = corpus_dir / f"fixture_{cname}.apk"
+        with zipfile.ZipFile(apk_order, "w") as zf:
+            _write_entry(zf, "classes.dex", make_dex(), zipfile.ZIP_DEFLATED)
+            for n, data in enumerate(entries, 2):
+                _write_entry(zf, f"classes{n}.dex", data, zipfile.ZIP_DEFLATED)
+        corpus[cname] = apk_order
+
+    # 9. An APK without DEX entries: findrefs prints nothing and never starts
+    # a worker pool, so even --threads 0 exits 0.
+    apk_no_dex = corpus_dir / "fixture_no_dex.apk"
+    with zipfile.ZipFile(apk_no_dex, "w") as zf:
+        _write_entry(zf, "AndroidManifest.xml", make_axml(), zipfile.ZIP_STORED)
+    corpus["no_dex"] = apk_no_dex
+
     # Fuzz findings are committed as-is (not generated): one per parity bug class.
     for apk in sorted(corpus_dir.glob("fixture_fuzz_*.apk")):
         corpus[apk.stem.removeprefix("fixture_")] = apk
@@ -187,7 +216,130 @@ def build_corpus(corpus_dir: Path) -> dict:
     return corpus
 
 
-def define_queries():
+def workload_samples(corpus: dict):
+    """Method 0 and field 0 of the workload DEX as (class descriptor, name),
+    the samples the reference script queries with; None without the workload."""
+    if "workload" not in corpus:
+        return None
+    with zipfile.ZipFile(corpus["workload"]) as zf:
+        dex = DEX.parse(memoryview(zf.read("classes.dex")), "classes.dex")
+    method, field = DexMethod(dex, 0), DexField(dex, 0)
+    return (method.cls.fullname, method.name), (field.cls.fullname, field.name)
+
+
+def findrefs_queries(corpus: dict):
+    """findrefs CLI goldens (M2 plan section 3.2).
+
+    Optional per-query flags, recorded in meta.json and honoured by check.py:
+      error_prefix_only  the Python message is re.error text: compare the exit
+                         code, stdout and the "Error: " prefix only
+      exit_code_only     an argparse usage error (usage text is M6)
+      rust_expect        "unsupported_syntax": Python accepts the pattern, the
+                         Rust engine refuses it with "Error: unsupported
+                         pattern syntax" (plan section 5, decision R)
+    """
+    def q(qid, corpus_names, args, **flags):
+        return {"id": f"findrefs_{qid}", "command": "findrefs", "corpus": corpus_names, "args": args, **flags}
+
+    queries = []
+    samples = workload_samples(corpus)
+    if samples is not None:
+        (m_cls, m_name), (f_cls, f_name) = samples
+        m_dotted = m_cls[1:-1].replace("/", ".")
+        queries += [
+            # the reference script's queries (reference-baseline.json counts)
+            q("ref_string_create", ["workload"], ["string", "create"]),
+            q("ref_method_view", ["workload"], ["method", "view"]),
+            q("ref_method_precise_class", ["workload"], ["method", "--class", m_cls]),
+            q("ref_method_precise_class_name", ["workload"], ["method", m_name, "--class", m_cls]),
+            q("ref_method_fuzzy_class", ["workload"], ["method", "--class", "AccessibilityServiceInfo", "--fuzzy-class"]),
+            q("ref_method_fuzzy_class_name", ["workload"],
+              ["method", m_name, "--class", "AccessibilityServiceInfo", "--fuzzy-class"]),
+            q("ref_field_action", ["workload"], ["field", "action"]),
+            q("ref_field_precise_class", ["workload"], ["field", "--class", f_cls]),
+            q("ref_field_precise_class_name", ["workload"], ["field", f_name, "--class", f_cls]),
+            q("ref_field_fuzzy_class", ["workload"], ["field", "--class", "Notification", "--fuzzy-class"]),
+            q("ref_field_fuzzy_class_name", ["workload"], ["field", f_name, "--class", "Notification", "--fuzzy-class"]),
+            q("ref_type_view", ["workload"], ["type", "View"]),
+            # class-name normalisation on real classes
+            q("norm_workload_dotted", ["workload"], ["method", "--class", m_dotted]),
+            q("norm_workload_fuzzy_dotted", ["workload"], ["method", "--class", m_dotted, "--fuzzy-class"]),
+            # a precise class name is matched as a literal substring, not a regex
+            q("precise_name_is_literal", ["workload"], ["method", m_name[:1] + "." + m_name[2:], "--class", m_cls]),
+            q("re_workload_final_char", ["workload"], ["string", "create."]),
+        ]
+
+    synthetic = ["stored", "multidex"]
+    queries += [
+        # class-name normalisation (cli._format_class_name / _normalize_class_query)
+        q("norm_dotted", synthetic, ["method", "--class", "example.Test"]),
+        q("norm_descriptor", synthetic, ["method", "--class", "Lexample/Test;"]),
+        q("norm_leading_l", synthetic, ["method", "--class", "Lexample.Test"]),
+        q("norm_fuzzy_package", synthetic, ["method", "--class", "example", "--fuzzy-class"]),
+        q("norm_fuzzy_dotted", synthetic, ["method", "--class", "example.Test", "--fuzzy-class"]),
+        q("norm_field_dotted", ["multidex"], ["field", "--class", "example.Statics"]),
+        q("norm_field_fuzzy_name", ["multidex"], ["field", "SEC", "--class", "Statics", "--fuzzy-class"]),
+        # regex surface
+        q("re_wildcard", ["stored", "workload"], ["string", "tok.n"]),
+        q("re_anchor", ["stored", "workload"], ["string", "^tok"]),
+        q("re_icase", ["stored", "workload"], ["string", "(?i)TOKEN"]),
+        q("re_class", ["stored", "workload"], ["string", "[a-c]reate"]),
+        q("re_final_terminator", ["stored", "workload"], ["string", "token."]),
+        q("re_every_string", ["stored", "multidex"], ["string", "."]),
+        q("re_alternation", ["stored", "multidex"], ["string", "first|token"]),
+        q("re_type_wildcard", ["stored", "multidex"], ["type", "example.Test"]),
+        q("re_literal_brace", ["stored", "workload"], ["string", "a{"]),
+        q("re_python_braces", ["stored", "workload"], ["string", "crea{1,}te|ma{,1}x{}|{1|tok{,2}en"]),
+        # can match empty and prefers the empty option: CPython's finditer then
+        # retries a non-empty match at the same position, regex cannot
+        q("re_empty_preferring", ["stored"], ["string", "|token"], rust_expect="unsupported_syntax"),
+        q("re_lookbehind", ["stored", "workload"], ["string", "(?<=t)oken"], rust_expect="unsupported_syntax"),
+        q("re_possessive", ["stored"], ["string", "to++ken"], rust_expect="unsupported_syntax"),
+        q("re_unclosed", ["stored", "workload"], ["string", "(unclosed"], error_prefix_only=True),
+        # MUTF-8
+        q("mutf8_non_ascii", ["mutf8"], ["string", "\u00e9"]),
+        q("mutf8_emoji", ["mutf8"], ["string", "\U0001F600"]),
+        q("mutf8_emoji_class", ["mutf8"], ["method", "--class", "L\U0001F600;"]),
+        # DEX 041 container: every locator, not only strings
+        q("dex041_method", ["dex041"], ["method", "first"]),
+        q("dex041_method_class", ["dex041"], ["method", "--class", "example.Test"]),
+        q("dex041_type", ["dex041"], ["type", "Lexample/Test;"]),
+        q("dex041_every_string", ["dex041"], ["string", "."]),
+        # error contract
+        q("err_empty_member", ["stored"], ["method"]),
+        q("err_empty_field_class", ["stored"], ["field", "--class", ""]),
+        q("err_empty_string", ["stored"], ["string", ""]),
+        q("err_threads_zero", ["stored", "no_dex"], ["--threads", "0", "string", "token"]),
+        q("err_threads_negative", ["stored"], ["--threads", "-1", "string", "token"]),
+        q("err_error_order", ["error_order_slow_first", "error_order_fast_first"], ["string", "token"]),
+        q("err_lazy_insn_map", ["fuzz_insns_hang", "fuzz_insns_overrun"], ["string", "zzz_nomatch"]),
+        q("err_corrupt", sorted(c for c in corpus if c.startswith(("corrupt_", "fuzz_"))), ["string", "token"]),
+        q("no_dex_entries", ["no_dex"], ["string", "token"]),
+        # argparse grammar (usage text itself is M6)
+        # --thr is ambiguous: it prefixes both --threads and --thread
+        q("argparse_ambiguous_prefix", ["stored"], ["--thr", "2", "string", "token"], exit_code_only=True),
+        q("argparse_unique_prefix", ["stored"], ["--deb", "method", "--cl", "example", "--fuzzy"]),
+        # an attached short value; the -o output.file appended after it wins
+        q("argparse_short_attached", ["stored"], ["string", "-o/dev/null", "tok.n"]),
+        q("argparse_double_dash", ["stored"], ["string", "--", "-tok"], no_output_file=True),
+        q("argparse_bad_int", ["stored"], ["--threads", "two", "string", "token"], exit_code_only=True),
+        q("argparse_bad_choice", ["stored"], ["strings", "token"], exit_code_only=True),
+        q("argparse_equals", ["stored"], ["--threads=2", "string", "token"]),
+        q("argparse_thread_alias", ["stored"], ["--thread", "2", "string", "token"]),
+        q("argparse_debug_after_leaf", ["stored"], ["string", "token", "--debug"], exit_code_only=True),
+        q("argparse_missing_value", ["stored"], ["string"], exit_code_only=True),
+        # --debug: timing lines keep their shape, numbers normalised
+        q("debug_single_entry", ["stored"], ["--debug", "--threads", "1", "string", "token"]),
+        q("debug_no_entries", ["no_dex"], ["--debug", "string", "token"]),
+        # a large real APK (local only)
+        q("ads_string_create", ["ads_solution"], ["string", "create"]),
+        q("ads_method_oncreate", ["ads_solution"], ["method", "onCreate"]),
+        q("ads_field_fuzzy_class", ["ads_solution"], ["field", "--class", "Notification", "--fuzzy-class"]),
+    ]
+    return queries
+
+
+def define_queries(corpus: dict):
     """Returns list of query definitions covering synthetic and real corpus."""
     return [
         # findrefs string queries
@@ -261,12 +413,20 @@ def define_queries():
             "args": ["Lcom/google/android/gms/common/GoogleApiAvailability;"],
             "target_class": "Lcom/google/android/gms/common/GoogleApiAvailability;",
         },
-    ]
+    ] + findrefs_queries(corpus)
 
 
-def clean_cli_output(text: str, is_debug: bool = False) -> str:
+def _text(raw: bytes) -> str:
+    # bytes as written, no newline translation: subprocess text mode would turn
+    # every "\r" into "\n" and hide a real difference
+    return raw.decode("utf-8", "surrogateescape")
+
+
+def clean_cli_output(text: str, is_debug: bool = False, command: str = "") -> str:
     if not is_debug:
         return text
+    if command == "findrefs":
+        return TIMING_LINE_REGEX.sub(lambda m: re.sub(r"\d+", "N", m.group(0)), text)
     text = DEBUG_REGEX.sub("", text)
     text = SEP_REGEX.sub("", text)
     return text
@@ -277,9 +437,10 @@ def run_oracle_cli(apk_path: Path, command: str, args: list, output_file: Path =
     if output_file:
         cmd.extend(["-o", str(output_file)])
 
-    res = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
-    is_debug = "--debug" in args
-    return res.returncode, clean_cli_output(res.stdout, is_debug), res.stderr
+    res = subprocess.run(cmd, cwd=ROOT, capture_output=True)
+    # any abbreviation argparse accepts for --debug (--deb, --de, ...)
+    is_debug = any(len(a) > 3 and "--debug".startswith(a) for a in args)
+    return res.returncode, clean_cli_output(_text(res.stdout), is_debug, command), _text(res.stderr)
 
 
 def generate_goldens(output_dir: Path, corpus_dir: Path, allow_dirty: bool = False):
@@ -299,7 +460,7 @@ def generate_goldens(output_dir: Path, corpus_dir: Path, allow_dirty: bool = Fal
         shutil.rmtree(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     corpus = build_corpus(corpus_dir)
-    queries = define_queries()
+    queries = define_queries(corpus)
 
     manifest_summary = []
 
@@ -317,11 +478,12 @@ def generate_goldens(output_dir: Path, corpus_dir: Path, allow_dirty: bool = Fal
             target_dir = output_dir / apk_hash / qid
             target_dir.mkdir(parents=True, exist_ok=True)
 
-            out_flag_file = target_dir / "output.file"
+            # -o goes last, so a query ending in "--" arguments runs without it
+            out_flag_file = None if q.get("no_output_file") else target_dir / "output.file"
             rc, stdout, stderr = run_oracle_cli(apk_path, cmd_name, args, output_file=out_flag_file)
 
-            (target_dir / "stdout.txt").write_text(stdout, encoding="utf-8")
-            (target_dir / "stderr.txt").write_text(stderr, encoding="utf-8")
+            (target_dir / "stdout.txt").write_bytes(stdout.encode("utf-8", "surrogateescape"))
+            (target_dir / "stderr.txt").write_bytes(stderr.encode("utf-8", "surrogateescape"))
             (target_dir / "exit_code.txt").write_text(f"{rc}\n", encoding="utf-8")
 
             # Level 2: DEX rebuilt bytes for getclass
@@ -349,6 +511,9 @@ def generate_goldens(output_dir: Path, corpus_dir: Path, allow_dirty: bool = Fal
                 "python_version": sys.version,
                 "androguard_version": androguard_ver,
             }
+            for flag in ("error_prefix_only", "exit_code_only", "rust_expect"):
+                if flag in q:
+                    meta[flag] = q[flag]
             (target_dir / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
             manifest_summary.append({"path": str(target_dir.relative_to(output_dir)), "meta": meta})
 
@@ -364,6 +529,17 @@ def generate_goldens(output_dir: Path, corpus_dir: Path, allow_dirty: bool = Fal
         payload = json.dumps(dump, indent=2, sort_keys=True).encode("utf-8")
         with open(prim_dir / "primitives.json.gz", "wb") as raw:
             with gzip.GzipFile(filename="primitives.json", mode="wb", fileobj=raw, compresslevel=9, mtime=0) as gz:
+                gz.write(payload)
+
+    # Level 3 (M2): findrefs stage dump for every corpus APK
+    print("\nGenerating Level 3 findrefs stage goldens for corpus APKs...")
+    for cname, apk_path in corpus.items():
+        apk_hash = sha256_file(apk_path)[:16]
+        fr_dir = output_dir / apk_hash / "findrefs"
+        fr_dir.mkdir(parents=True, exist_ok=True)
+        payload = json.dumps(dump_apk_findrefs(apk_path), indent=2, sort_keys=True).encode("utf-8")
+        with open(fr_dir / "findrefs.json.gz", "wb") as raw:
+            with gzip.GzipFile(filename="findrefs.json", mode="wb", fileobj=raw, compresslevel=9, mtime=0) as gz:
                 gz.write(payload)
 
     (output_dir / "manifest.json").write_text(json.dumps(manifest_summary, indent=2), encoding="utf-8")
