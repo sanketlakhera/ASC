@@ -11,7 +11,7 @@ why, and the result of every exit check.
 
 | Step | Content | Exit check | Result |
 |---|---|---|---|
-| M2.0 | Oracle fixes F1–F4, golden expansion, `dump_findrefs.py`, `check.py --findrefs`, `differential.py --dump` | sweep 0/0, benchmark gate vs `b3e649e`, goldens, tag | done except the tag (needs a commit) |
+| M2.0 | Oracle fixes F1–F4, golden expansion, `dump_findrefs.py`, `check.py --findrefs`, `differential.py --dump` | sweep 0/0, benchmark gate vs `b3e649e`, goldens, tag | done; goldens from the clean tree at `410da90`, tagged `oracle-m2` |
 | M2.1 | `string.rs`, `types.rs`, pattern translation | string/type maps and queries match | done |
 | M2.2 | `member.rs` | method/field maps, 12 locator counts | done |
 | M2.3 | `insn.rs`, `verify.rs`, `insn_verify.json`, `verify_differential.py` | insn map matches; 20,000 vectors; 10⁶ differential | done |
@@ -148,9 +148,6 @@ negative values print Python's message, as decided (T).
 
 ## 7. Open
 
-- **Commit and tag.** Goldens were generated with `--allow-dirty` against the
-  working tree. After committing: regenerate them from the clean tree, commit
-  them, tag `oracle-m2`.
 - **`cli_findrefs` under 30 ms** (a target, not a gate) is not reached: the median
   is 34 ms, most of it inflating the workload's 9.6 MB DEX (~31 ms with zlib-rs,
   level with CPython's zlib).
