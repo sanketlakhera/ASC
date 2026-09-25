@@ -67,3 +67,24 @@ path = "fuzz_targets/tinydex_walk.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "string_locator"
+path = "fuzz_targets/string_locator.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "insn_locator"
+path = "fuzz_targets/insn_locator.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "findrefs"
+path = "fuzz_targets/findrefs.rs"
+test = false
+doc = false
+bench = false

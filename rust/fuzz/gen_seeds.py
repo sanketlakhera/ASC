@@ -92,6 +92,15 @@ def main():
         for m in mutations(dex, rng):
             put("tinydex_walk", m)
 
+    # string_locator: a length-prefixed pattern, then a DEX (M2). Patterns span
+    # the translator's cases: literals, braces, classes, flags, refusals.
+    patterns = [b"token", b"tok.n", b"(?i)TOKEN", b"a{", b"x{,3}", b"[a&&b]", b"\\<", b"(?<=t)oken",
+                b"|token", b"(?x) t o k", b"[^\\W\\d]+", b"\xc3\xa9", b"(", b"a**", b".", b""]
+    for dex in dexes:
+        if len(dex) <= 1 << 16:
+            for pat in patterns:
+                put("string_locator", bytes([len(pat)]) + pat + dex)
+
     vectors = CONF / "vectors"
     for case in json.loads((vectors / "mutf8.json").read_text())["decode"][:300]:
         put("mutf8", bytes.fromhex(case["input_hex"]))

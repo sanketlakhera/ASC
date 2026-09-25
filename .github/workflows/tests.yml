@@ -93,4 +93,22 @@ jobs:
         working-directory: rust
       - name: Conformance primitives check
         run: python rust/conformance/check.py --primitives --bin rust/target/debug/asc
+      - name: Conformance findrefs stage check
+        run: python rust/conformance/check.py --findrefs --bin rust/target/debug/asc
+      - name: Conformance findrefs CLI goldens
+        run: python rust/conformance/check.py --only findrefs --bin rust/target/debug/asc
+      - name: Build release asc binary
+        run: cargo build --release --bin asc
+        working-directory: rust
+      - name: Rust findrefs must be faster than Python on every stage
+        run: >-
+          python tests/benchmark_compare.py --baseline . --candidate-bin rust/target/release/asc
+          --samples 15 --output artifacts/comparison-rust
+      - name: Upload Rust benchmark report
+        if: always()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: benchmarks-rust
+          path: artifacts/comparison-rust/
+          if-no-files-found: warn
 
