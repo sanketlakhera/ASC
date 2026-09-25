@@ -76,6 +76,138 @@ class StringTableTests(unittest.TestCase):
         self.assertEqual(read_uleb128_fast(data, string_off)[0], 9)
 
 
+class StringAttributionTests(unittest.TestCase):
+    """A string query is a bytes regex over the whole string_data region. Each
+    match belongs to the string holding the first NUL at or after its end: the
+    string with the greatest string_data_off not above that NUL."""
+
+    def locate(self, raw, query):
+        return StringLocator(DEX.parse(memoryview(bytes(raw)), 'fixture.dex')).locate(query)
+
+    def permute(self, raw, order):
+        """Rewrite make_dex()'s contiguous string_data in place with its items
+        laid out in `order` (string indices), and repoint string_ids."""
+        raw = bytearray(raw)
+        ids_off, = struct.unpack_from('<I', raw, 0x3C)
+        offs = [struct.unpack_from('<I', raw, ids_off + 4 * i)[0] for i in range(len(order))]
+        end = raw.index(b'\0', offs[-1] + 1) + 1
+        items = [bytes(raw[a:b]) for a, b in zip(offs, offs[1:] + [end])]
+        pos = offs[0]
+        for idx in order:
+            raw[pos:pos + len(items[idx])] = items[idx]
+            struct.pack_into('<I', raw, ids_off + 4 * idx, pos)
+            pos += len(items[idx])
+        return raw
+
+    def test_empty_pattern_matches_nothing(self):
+        # used to leak KeyError 0 ("Error: 0"): the empty match at the region
+        # end finds no NUL after it
+        self.assertEqual(self.locate(make_dex(), ''), set())
+        with tempfile.TemporaryDirectory() as directory:
+            apk = Path(directory) / 'fixture.apk'
+            with zipfile.ZipFile(apk, 'w') as archive:
+                archive.writestr('classes.dex', make_dex())
+            result = run_cli('findrefs', str(apk), 'string', '')
+        self.assertEqual((result.returncode, result.stdout, result.stderr), (0, '', ''))
+
+    def test_match_through_the_final_terminator_belongs_to_no_string(self):
+        self.assertEqual(self.locate(make_dex(), 'token.'), set())
+        self.assertEqual(self.locate(make_dex(), 'token\\x00'), set())
+
+    def test_match_through_a_terminator_belongs_to_the_next_string(self):
+        # 'first\0' + uleb(6) + 's' of 'second'
+        self.assertEqual(self.locate(make_dex(), 'first..s'), {4})
+
+    def test_every_string_is_reachable(self):
+        self.assertEqual(self.locate(make_dex(), '.'), set(range(6)))
+
+    def test_string_data_out_of_string_ids_order(self):
+        # layout: token, first, second, Lexample/Test;, Ljava/lang/Object;, V
+        raw = self.permute(make_dex(), [5, 3, 4, 0, 1, 2])
+        self.assertEqual(self.locate(raw, 'token'), {5})
+        self.assertEqual(self.locate(raw, 'first'), {3})
+        self.assertEqual(self.locate(raw, 'Object'), {1})
+        self.assertEqual(self.locate(raw, 'first..s'), {4})
+        # the region ends at the terminator of the highest string_data_item
+        self.assertEqual(self.locate(raw, 'V'), {2})
+        self.assertEqual(self.locate(raw, 'V.'), set())
+
+    def test_duplicate_offsets_resolve_to_the_highest_index(self):
+        raw = bytearray(make_dex())
+        ids_off = struct.unpack_from('<I', raw, 0x3C)[0]
+        struct.pack_into('<I', raw, ids_off + 4 * 4, struct.unpack_from('<I', raw, ids_off + 4 * 3)[0])
+        self.assertEqual(self.locate(raw, 'first'), {4})
+
+
+class MemberNameOrderTests(unittest.TestCase):
+    """A precise class with a name filters the class's members by their decoded
+    names; on a corrupt DEX several names can fail, and the one reported must be
+    the lowest id, not whichever a CPython set yields first."""
+
+    def test_names_are_read_in_ascending_id_order(self):
+        from types import SimpleNamespace
+        from droidasc.asc_core.findrefs.locator.field_locator import FieldLocator
+
+        class Undecodable:
+            def __init__(self, idx):
+                self.idx = idx
+
+            @property
+            def name(self):
+                raise ValueError(f'bad name {self.idx}')
+
+        class Failing:
+            def __getitem__(self, idx):
+                return Undecodable(idx)
+
+        ids = {3, 9}
+        self.assertEqual(list(ids), [9, 3])  # set order differs from id order here
+        for cls, method in ((MethodLocator, '_match_clz_mids'), (FieldLocator, '_match_clz_fids')):
+            with self.subTest(locator=cls.__name__):
+                locator = cls.__new__(cls)
+                locator.dex = SimpleNamespace(methods=Failing(), fields=Failing())
+                with self.assertRaisesRegex(ValueError, '^bad name 3$'):
+                    getattr(locator, method)(set(ids), 'x')
+
+
+class ErrorOrderTests(unittest.TestCase):
+    """With several failing DEX entries, findrefs prints every entry before the
+    first failing one (in entry order) and then that entry's error, however the
+    workers finish."""
+
+    def run_apk(self, entries):
+        with tempfile.TemporaryDirectory() as directory:
+            apk = Path(directory) / 'fixture.apk'
+            with zipfile.ZipFile(apk, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
+                for name, data in entries:
+                    archive.writestr(name, data)
+            return [run_cli('findrefs', str(apk), '--threads', '3', 'string', 'token') for _ in range(2)]
+
+    def test_first_failing_entry_in_entry_order_wins(self):
+        # Entry order is ascending compressed size: valid, slow failure, fast failure.
+        # The fast one finishes first; it must not be the one reported.
+        from dex_fixture import make_fast_bad_string_ids_dex, make_slow_insns_overrun_dex
+        results = self.run_apk([('classes.dex', make_dex()),
+                                ('classes2.dex', make_slow_insns_overrun_dex()),
+                                ('classes3.dex', make_fast_bad_string_ids_dex())])
+        for result in results:
+            self.assertEqual(result.returncode, 1)
+            self.assertEqual(result.stdout, 'classes.dex | Lexample/Test;->first | matched=(token)\n'
+                                            'classes.dex | Lexample/Test;->second | matched=(token)\n')
+            self.assertEqual(result.stderr, 'Error: bad code_item offset\n')
+
+    def test_later_failure_is_not_reported(self):
+        # Entry order: valid, fast failure, slow failure.
+        from dex_fixture import make_fast_bad_string_ids_dex, make_slow_insns_overrun_dex
+        results = self.run_apk([('classes.dex', make_dex()),
+                                ('classes2.dex', make_fast_bad_string_ids_dex(padding=8 << 10)),
+                                ('classes3.dex', make_slow_insns_overrun_dex())])
+        for result in results:
+            self.assertEqual(result.returncode, 1)
+            self.assertEqual(result.stdout.count('\n'), 2)
+            self.assertEqual(result.stderr, 'Error: bad string_ids range\n')
+
+
 class DescriptorOrderTests(unittest.TestCase):
     """type_ids sort by MUTF-8 bytes; surrogate pairs sort below U+E000..U+FFFF
     in bytes but above them by code point, so str comparison misses them."""

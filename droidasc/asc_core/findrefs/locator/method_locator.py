@@ -79,7 +79,9 @@ class MethodLocator(BaseLocator):
     def _match_clz_mids(self, clz_mids : set, method : str) -> set:
         ret = set()
         methods = self.dex.methods
-        for mid in clz_mids:
+        # ascending, not set order: a name that fails to decode raises, and
+        # which one fails first must not depend on hash-table slots
+        for mid in sorted(clz_mids):
             if methods[mid].name.find(method) != -1:
                 ret.add(mid)
         return ret

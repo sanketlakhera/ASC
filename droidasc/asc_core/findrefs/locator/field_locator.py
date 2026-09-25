@@ -80,7 +80,9 @@ class FieldLocator(BaseLocator):
     def _match_clz_fids(self, clz_fids : set, field : str) -> set:
         ret = set()
         fields = self.dex.fields
-        for fid in clz_fids:
+        # ascending, not set order: a name that fails to decode raises, and
+        # which one fails first must not depend on hash-table slots
+        for fid in sorted(clz_fids):
             if fields[fid].name.find(field) != -1:
                 ret.add(fid)
         return ret

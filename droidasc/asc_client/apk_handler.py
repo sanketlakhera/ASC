@@ -477,7 +477,9 @@ class ApkHandler:
         sys.stderr.flush()
         # Contract: results are yielded in `entries` order (ascending compressed
         # size, ties in central-directory order), whatever order the workers
-        # finish in. Completed results ahead of the cursor are buffered.
+        # finish in. Completed results ahead of the cursor are buffered. A
+        # failed entry is buffered the same way and raised when the cursor
+        # reaches it: every entry before it is yielded, none after it.
         with ProcessPoolExecutor(max_workers=self.max_workers,
                                  mp_context=_process_pool_context()) as ex:
             futures = {}
@@ -491,7 +493,11 @@ class ApkHandler:
                 done, _pending = wait(list(futures.keys()), return_when=FIRST_COMPLETED)
                 for fut in done:
                     entry_idx = futures.pop(fut)
-                    dex_name, lines, inflate_us, process_us, pid = fut.result()
+                    try:
+                        dex_name, lines, inflate_us, process_us, pid = fut.result()
+                    except Exception as exc:
+                        ready[entry_idx] = exc
+                        continue
                     if self.debug:
                         self._log(
                             f"[APK] [P{pid}] '{dex_name}' inflate={inflate_us:.2f} us "
@@ -499,7 +505,10 @@ class ApkHandler:
                         )
                     ready[entry_idx] = (dex_name, lines)
                 while next_idx in ready:
-                    yield ready.pop(next_idx)
+                    result = ready.pop(next_idx)
+                    if isinstance(result, Exception):
+                        raise result
+                    yield result
                     next_idx += 1
 
         if self.debug:

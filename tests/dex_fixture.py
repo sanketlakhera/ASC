@@ -100,6 +100,26 @@ def make_dex041_container(*logical):
     return out
 
 
+def make_slow_insns_overrun_dex(zero_padding=48 << 20):
+    """make_dex() whose code_item claims 0x7fffffff code units, followed by
+    zero_padding zero bytes. A query that builds the instruction map fails with
+    'bad code_item offset', but only after inflating the padding, which deflate
+    stores in a few KB yet takes tens of ms to expand."""
+    raw = bytearray(make_dex())
+    header = struct.pack('<HHHHII', 1, 0, 0, 0, 0, 3)
+    struct.pack_into('<I', raw, raw.index(header) + 12, 0x7fffffff)
+    return bytes(raw) + bytes(zero_padding)
+
+
+def make_fast_bad_string_ids_dex(padding=64 << 10):
+    """make_dex() with string_ids_off past the end: any query fails at once
+    with 'bad string_ids range'. The incompressible padding makes its
+    compressed entry larger than make_slow_insns_overrun_dex()'s."""
+    raw = bytearray(make_dex(padding=padding))
+    struct.pack_into('<I', raw, 0x3C, 0xFFFFFFF0)
+    return bytes(raw)
+
+
 def make_static_field_dex():
     """Build a DEX whose static_values and sget field operand must agree."""
     strings = [b'Lexample/Statics;', b'Ljava/lang/Object;', b'I', b'FIRST', b'SECOND', b'getSecond']
