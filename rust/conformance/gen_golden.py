@@ -68,9 +68,11 @@ def get_git_info(ignore_dirs: tuple = ()) -> tuple:
         rev = subprocess.check_output(
             ["git", "-C", str(ROOT), "describe", "--always", "--dirty"], text=True
         ).strip()
+        # rstrip, not strip: the first line's status column may start with a
+        # space (" M path"), and stripping it shifts the path by one character
         status = subprocess.check_output(
             ["git", "-C", str(ROOT), "status", "--porcelain"], text=True
-        ).strip()
+        ).rstrip()
         ignored = tuple(str(Path(d).resolve().relative_to(ROOT)).rstrip("/") + "/" for d in ignore_dirs)
         status_lines = [
             line for line in status.splitlines()
