@@ -1,0 +1,4 @@
+classes2.dex | Lexample/Test;->first | matched=(token)
+classes2.dex | Lexample/Test;->second | matched=(token)
+classes.dex | Lexample/Test;->first | matched=(token)
+classes.dex | Lexample/Test;->second | matched=(token)

@@ -10,7 +10,7 @@
       ],
       "corpus_name": "stored",
       "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
-      "oracle_git_revision": "oracle-m1-5-g4da6bfd",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
       "git_dirty": false,
       "diff_sha256": null,
       "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
@@ -28,7 +28,7 @@
       ],
       "corpus_name": "multidex",
       "apk_sha256": "9cc9df0c1cb2b0fb0b26bca4d8c7c90c6a9cd10e1f92e3f6b58badb96117f491",
-      "oracle_git_revision": "oracle-m1-5-g4da6bfd",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
       "git_dirty": false,
       "diff_sha256": null,
       "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
@@ -46,7 +46,7 @@
       ],
       "corpus_name": "dex041",
       "apk_sha256": "aac27354a55cf96bde9802ff1ce62cd027332d646f588e305a14f313ec24f324",
-      "oracle_git_revision": "oracle-m1-5-g4da6bfd",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
       "git_dirty": false,
       "diff_sha256": null,
       "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
@@ -64,7 +64,7 @@
       ],
       "corpus_name": "workload",
       "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
-      "oracle_git_revision": "oracle-m1-5-g4da6bfd",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
       "git_dirty": false,
       "diff_sha256": null,
       "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
@@ -82,7 +82,7 @@
       ],
       "corpus_name": "stored",
       "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
-      "oracle_git_revision": "oracle-m1-5-g4da6bfd",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
       "git_dirty": false,
       "diff_sha256": null,
       "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
@@ -100,7 +100,7 @@
       ],
       "corpus_name": "multidex",
       "apk_sha256": "9cc9df0c1cb2b0fb0b26bca4d8c7c90c6a9cd10e1f92e3f6b58badb96117f491",
-      "oracle_git_revision": "oracle-m1-5-g4da6bfd",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
       "git_dirty": false,
       "diff_sha256": null,
       "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
@@ -120,7 +120,7 @@
       ],
       "corpus_name": "stored",
       "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
-      "oracle_git_revision": "oracle-m1-5-g4da6bfd",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
       "git_dirty": false,
       "diff_sha256": null,
       "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
@@ -140,7 +140,7 @@
       ],
       "corpus_name": "multidex",
       "apk_sha256": "9cc9df0c1cb2b0fb0b26bca4d8c7c90c6a9cd10e1f92e3f6b58badb96117f491",
-      "oracle_git_revision": "oracle-m1-5-g4da6bfd",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
       "git_dirty": false,
       "diff_sha256": null,
       "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
@@ -160,7 +160,7 @@
       ],
       "corpus_name": "multidex",
       "apk_sha256": "9cc9df0c1cb2b0fb0b26bca4d8c7c90c6a9cd10e1f92e3f6b58badb96117f491",
-      "oracle_git_revision": "oracle-m1-5-g4da6bfd",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
       "git_dirty": false,
       "diff_sha256": null,
       "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
@@ -178,7 +178,7 @@
       ],
       "corpus_name": "fuzz_insns_overrun",
       "apk_sha256": "68d031a3f10df63c44a1632b89bf58d42a90a65bc97fc0951845476fcd08e52d",
-      "oracle_git_revision": "oracle-m1-5-g4da6bfd",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
       "git_dirty": false,
       "diff_sha256": null,
       "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
@@ -196,7 +196,7 @@
       ],
       "corpus_name": "fuzz_insns_hang",
       "apk_sha256": "6251aed19b2af99df56797fc35395d38239952bcf264a228f4e26e0e8a179e4f",
-      "oracle_git_revision": "oracle-m1-5-g4da6bfd",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
       "git_dirty": false,
       "diff_sha256": null,
       "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
@@ -213,7 +213,7 @@
       ],
       "corpus_name": "fuzz_insns_overrun",
       "apk_sha256": "68d031a3f10df63c44a1632b89bf58d42a90a65bc97fc0951845476fcd08e52d",
-      "oracle_git_revision": "oracle-m1-5-g4da6bfd",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
       "git_dirty": false,
       "diff_sha256": null,
       "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
@@ -228,7 +228,7 @@
       "args": [],
       "corpus_name": "stored",
       "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
-      "oracle_git_revision": "oracle-m1-5-g4da6bfd",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
       "git_dirty": false,
       "diff_sha256": null,
       "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
@@ -243,7 +243,7 @@
       "args": [],
       "corpus_name": "ads_solution",
       "apk_sha256": "1ee7fafe1087ed5449a1eff865524c62c2516db1a308c3be550e7ea6006188a5",
-      "oracle_git_revision": "oracle-m1-5-g4da6bfd",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
       "git_dirty": false,
       "diff_sha256": null,
       "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
@@ -260,7 +260,7 @@
       ],
       "corpus_name": "stored",
       "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
-      "oracle_git_revision": "oracle-m1-5-g4da6bfd",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
       "git_dirty": false,
       "diff_sha256": null,
       "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
@@ -277,7 +277,7 @@
       ],
       "corpus_name": "multidex",
       "apk_sha256": "9cc9df0c1cb2b0fb0b26bca4d8c7c90c6a9cd10e1f92e3f6b58badb96117f491",
-      "oracle_git_revision": "oracle-m1-5-g4da6bfd",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
       "git_dirty": false,
       "diff_sha256": null,
       "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
@@ -294,7 +294,1991 @@
       ],
       "corpus_name": "ads_solution",
       "apk_sha256": "1ee7fafe1087ed5449a1eff865524c62c2516db1a308c3be550e7ea6006188a5",
-      "oracle_git_revision": "oracle-m1-5-g4da6bfd",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_ref_string_create",
+    "meta": {
+      "query_id": "findrefs_ref_string_create",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "create"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_ref_method_view",
+    "meta": {
+      "query_id": "findrefs_ref_method_view",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "view"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_ref_method_precise_class",
+    "meta": {
+      "query_id": "findrefs_ref_method_precise_class",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "--class",
+        "Landroid/accessibilityservice/AccessibilityServiceInfo;"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_ref_method_precise_class_name",
+    "meta": {
+      "query_id": "findrefs_ref_method_precise_class_name",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "getCapabilities",
+        "--class",
+        "Landroid/accessibilityservice/AccessibilityServiceInfo;"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_ref_method_fuzzy_class",
+    "meta": {
+      "query_id": "findrefs_ref_method_fuzzy_class",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "--class",
+        "AccessibilityServiceInfo",
+        "--fuzzy-class"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_ref_method_fuzzy_class_name",
+    "meta": {
+      "query_id": "findrefs_ref_method_fuzzy_class_name",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "getCapabilities",
+        "--class",
+        "AccessibilityServiceInfo",
+        "--fuzzy-class"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_ref_field_action",
+    "meta": {
+      "query_id": "findrefs_ref_field_action",
+      "command": "findrefs",
+      "args": [
+        "field",
+        "action"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_ref_field_precise_class",
+    "meta": {
+      "query_id": "findrefs_ref_field_precise_class",
+      "command": "findrefs",
+      "args": [
+        "field",
+        "--class",
+        "Landroid/app/Notification$Action;"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_ref_field_precise_class_name",
+    "meta": {
+      "query_id": "findrefs_ref_field_precise_class_name",
+      "command": "findrefs",
+      "args": [
+        "field",
+        "actionIntent",
+        "--class",
+        "Landroid/app/Notification$Action;"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_ref_field_fuzzy_class",
+    "meta": {
+      "query_id": "findrefs_ref_field_fuzzy_class",
+      "command": "findrefs",
+      "args": [
+        "field",
+        "--class",
+        "Notification",
+        "--fuzzy-class"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_ref_field_fuzzy_class_name",
+    "meta": {
+      "query_id": "findrefs_ref_field_fuzzy_class_name",
+      "command": "findrefs",
+      "args": [
+        "field",
+        "actionIntent",
+        "--class",
+        "Notification",
+        "--fuzzy-class"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_ref_type_view",
+    "meta": {
+      "query_id": "findrefs_ref_type_view",
+      "command": "findrefs",
+      "args": [
+        "type",
+        "View"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_norm_workload_dotted",
+    "meta": {
+      "query_id": "findrefs_norm_workload_dotted",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "--class",
+        "android.accessibilityservice.AccessibilityServiceInfo"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_norm_workload_fuzzy_dotted",
+    "meta": {
+      "query_id": "findrefs_norm_workload_fuzzy_dotted",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "--class",
+        "android.accessibilityservice.AccessibilityServiceInfo",
+        "--fuzzy-class"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_precise_name_is_literal",
+    "meta": {
+      "query_id": "findrefs_precise_name_is_literal",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "g.tCapabilities",
+        "--class",
+        "Landroid/accessibilityservice/AccessibilityServiceInfo;"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_re_workload_final_char",
+    "meta": {
+      "query_id": "findrefs_re_workload_final_char",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "create."
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_norm_dotted",
+    "meta": {
+      "query_id": "findrefs_norm_dotted",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "--class",
+        "example.Test"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "9cc9df0c1cb2b0fb/findrefs_norm_dotted",
+    "meta": {
+      "query_id": "findrefs_norm_dotted",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "--class",
+        "example.Test"
+      ],
+      "corpus_name": "multidex",
+      "apk_sha256": "9cc9df0c1cb2b0fb0b26bca4d8c7c90c6a9cd10e1f92e3f6b58badb96117f491",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_norm_descriptor",
+    "meta": {
+      "query_id": "findrefs_norm_descriptor",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "--class",
+        "Lexample/Test;"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "9cc9df0c1cb2b0fb/findrefs_norm_descriptor",
+    "meta": {
+      "query_id": "findrefs_norm_descriptor",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "--class",
+        "Lexample/Test;"
+      ],
+      "corpus_name": "multidex",
+      "apk_sha256": "9cc9df0c1cb2b0fb0b26bca4d8c7c90c6a9cd10e1f92e3f6b58badb96117f491",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_norm_leading_l",
+    "meta": {
+      "query_id": "findrefs_norm_leading_l",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "--class",
+        "Lexample.Test"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "9cc9df0c1cb2b0fb/findrefs_norm_leading_l",
+    "meta": {
+      "query_id": "findrefs_norm_leading_l",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "--class",
+        "Lexample.Test"
+      ],
+      "corpus_name": "multidex",
+      "apk_sha256": "9cc9df0c1cb2b0fb0b26bca4d8c7c90c6a9cd10e1f92e3f6b58badb96117f491",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_norm_fuzzy_package",
+    "meta": {
+      "query_id": "findrefs_norm_fuzzy_package",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "--class",
+        "example",
+        "--fuzzy-class"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "9cc9df0c1cb2b0fb/findrefs_norm_fuzzy_package",
+    "meta": {
+      "query_id": "findrefs_norm_fuzzy_package",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "--class",
+        "example",
+        "--fuzzy-class"
+      ],
+      "corpus_name": "multidex",
+      "apk_sha256": "9cc9df0c1cb2b0fb0b26bca4d8c7c90c6a9cd10e1f92e3f6b58badb96117f491",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_norm_fuzzy_dotted",
+    "meta": {
+      "query_id": "findrefs_norm_fuzzy_dotted",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "--class",
+        "example.Test",
+        "--fuzzy-class"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "9cc9df0c1cb2b0fb/findrefs_norm_fuzzy_dotted",
+    "meta": {
+      "query_id": "findrefs_norm_fuzzy_dotted",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "--class",
+        "example.Test",
+        "--fuzzy-class"
+      ],
+      "corpus_name": "multidex",
+      "apk_sha256": "9cc9df0c1cb2b0fb0b26bca4d8c7c90c6a9cd10e1f92e3f6b58badb96117f491",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "9cc9df0c1cb2b0fb/findrefs_norm_field_dotted",
+    "meta": {
+      "query_id": "findrefs_norm_field_dotted",
+      "command": "findrefs",
+      "args": [
+        "field",
+        "--class",
+        "example.Statics"
+      ],
+      "corpus_name": "multidex",
+      "apk_sha256": "9cc9df0c1cb2b0fb0b26bca4d8c7c90c6a9cd10e1f92e3f6b58badb96117f491",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "9cc9df0c1cb2b0fb/findrefs_norm_field_fuzzy_name",
+    "meta": {
+      "query_id": "findrefs_norm_field_fuzzy_name",
+      "command": "findrefs",
+      "args": [
+        "field",
+        "SEC",
+        "--class",
+        "Statics",
+        "--fuzzy-class"
+      ],
+      "corpus_name": "multidex",
+      "apk_sha256": "9cc9df0c1cb2b0fb0b26bca4d8c7c90c6a9cd10e1f92e3f6b58badb96117f491",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_re_wildcard",
+    "meta": {
+      "query_id": "findrefs_re_wildcard",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "tok.n"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_re_wildcard",
+    "meta": {
+      "query_id": "findrefs_re_wildcard",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "tok.n"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_re_anchor",
+    "meta": {
+      "query_id": "findrefs_re_anchor",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "^tok"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_re_anchor",
+    "meta": {
+      "query_id": "findrefs_re_anchor",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "^tok"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_re_icase",
+    "meta": {
+      "query_id": "findrefs_re_icase",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "(?i)TOKEN"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_re_icase",
+    "meta": {
+      "query_id": "findrefs_re_icase",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "(?i)TOKEN"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_re_class",
+    "meta": {
+      "query_id": "findrefs_re_class",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "[a-c]reate"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_re_class",
+    "meta": {
+      "query_id": "findrefs_re_class",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "[a-c]reate"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_re_final_terminator",
+    "meta": {
+      "query_id": "findrefs_re_final_terminator",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token."
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_re_final_terminator",
+    "meta": {
+      "query_id": "findrefs_re_final_terminator",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token."
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_re_every_string",
+    "meta": {
+      "query_id": "findrefs_re_every_string",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "."
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "9cc9df0c1cb2b0fb/findrefs_re_every_string",
+    "meta": {
+      "query_id": "findrefs_re_every_string",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "."
+      ],
+      "corpus_name": "multidex",
+      "apk_sha256": "9cc9df0c1cb2b0fb0b26bca4d8c7c90c6a9cd10e1f92e3f6b58badb96117f491",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_re_alternation",
+    "meta": {
+      "query_id": "findrefs_re_alternation",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "first|token"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "9cc9df0c1cb2b0fb/findrefs_re_alternation",
+    "meta": {
+      "query_id": "findrefs_re_alternation",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "first|token"
+      ],
+      "corpus_name": "multidex",
+      "apk_sha256": "9cc9df0c1cb2b0fb0b26bca4d8c7c90c6a9cd10e1f92e3f6b58badb96117f491",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_re_type_wildcard",
+    "meta": {
+      "query_id": "findrefs_re_type_wildcard",
+      "command": "findrefs",
+      "args": [
+        "type",
+        "example.Test"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "9cc9df0c1cb2b0fb/findrefs_re_type_wildcard",
+    "meta": {
+      "query_id": "findrefs_re_type_wildcard",
+      "command": "findrefs",
+      "args": [
+        "type",
+        "example.Test"
+      ],
+      "corpus_name": "multidex",
+      "apk_sha256": "9cc9df0c1cb2b0fb0b26bca4d8c7c90c6a9cd10e1f92e3f6b58badb96117f491",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_re_literal_brace",
+    "meta": {
+      "query_id": "findrefs_re_literal_brace",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "a{"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_re_literal_brace",
+    "meta": {
+      "query_id": "findrefs_re_literal_brace",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "a{"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_re_python_braces",
+    "meta": {
+      "query_id": "findrefs_re_python_braces",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "crea{1,}te|ma{,1}x{}|{1|tok{,2}en"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_re_python_braces",
+    "meta": {
+      "query_id": "findrefs_re_python_braces",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "crea{1,}te|ma{,1}x{}|{1|tok{,2}en"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_re_empty_preferring",
+    "meta": {
+      "query_id": "findrefs_re_empty_preferring",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "|token"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3",
+      "rust_expect": "unsupported_syntax"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_re_lookbehind",
+    "meta": {
+      "query_id": "findrefs_re_lookbehind",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "(?<=t)oken"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3",
+      "rust_expect": "unsupported_syntax"
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_re_lookbehind",
+    "meta": {
+      "query_id": "findrefs_re_lookbehind",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "(?<=t)oken"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3",
+      "rust_expect": "unsupported_syntax"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_re_possessive",
+    "meta": {
+      "query_id": "findrefs_re_possessive",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "to++ken"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3",
+      "rust_expect": "unsupported_syntax"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_re_unclosed",
+    "meta": {
+      "query_id": "findrefs_re_unclosed",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "(unclosed"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3",
+      "error_prefix_only": true
+    }
+  },
+  {
+    "path": "bd6c07211ba46e70/findrefs_re_unclosed",
+    "meta": {
+      "query_id": "findrefs_re_unclosed",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "(unclosed"
+      ],
+      "corpus_name": "workload",
+      "apk_sha256": "bd6c07211ba46e7066d5ac076326085b63c5e0d9915c3f559e6fc73a81970af4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3",
+      "error_prefix_only": true
+    }
+  },
+  {
+    "path": "df184f73d57cfa18/findrefs_mutf8_non_ascii",
+    "meta": {
+      "query_id": "findrefs_mutf8_non_ascii",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "\u00e9"
+      ],
+      "corpus_name": "mutf8",
+      "apk_sha256": "df184f73d57cfa18d33e5427afe0c62f3af0436088fd8e351a959bdd51657d69",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "df184f73d57cfa18/findrefs_mutf8_emoji",
+    "meta": {
+      "query_id": "findrefs_mutf8_emoji",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "\ud83d\ude00"
+      ],
+      "corpus_name": "mutf8",
+      "apk_sha256": "df184f73d57cfa18d33e5427afe0c62f3af0436088fd8e351a959bdd51657d69",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "df184f73d57cfa18/findrefs_mutf8_emoji_class",
+    "meta": {
+      "query_id": "findrefs_mutf8_emoji_class",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "--class",
+        "L\ud83d\ude00;"
+      ],
+      "corpus_name": "mutf8",
+      "apk_sha256": "df184f73d57cfa18d33e5427afe0c62f3af0436088fd8e351a959bdd51657d69",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "aac27354a55cf96b/findrefs_dex041_method",
+    "meta": {
+      "query_id": "findrefs_dex041_method",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "first"
+      ],
+      "corpus_name": "dex041",
+      "apk_sha256": "aac27354a55cf96bde9802ff1ce62cd027332d646f588e305a14f313ec24f324",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "aac27354a55cf96b/findrefs_dex041_method_class",
+    "meta": {
+      "query_id": "findrefs_dex041_method_class",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "--class",
+        "example.Test"
+      ],
+      "corpus_name": "dex041",
+      "apk_sha256": "aac27354a55cf96bde9802ff1ce62cd027332d646f588e305a14f313ec24f324",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "aac27354a55cf96b/findrefs_dex041_type",
+    "meta": {
+      "query_id": "findrefs_dex041_type",
+      "command": "findrefs",
+      "args": [
+        "type",
+        "Lexample/Test;"
+      ],
+      "corpus_name": "dex041",
+      "apk_sha256": "aac27354a55cf96bde9802ff1ce62cd027332d646f588e305a14f313ec24f324",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "aac27354a55cf96b/findrefs_dex041_every_string",
+    "meta": {
+      "query_id": "findrefs_dex041_every_string",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "."
+      ],
+      "corpus_name": "dex041",
+      "apk_sha256": "aac27354a55cf96bde9802ff1ce62cd027332d646f588e305a14f313ec24f324",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_err_empty_member",
+    "meta": {
+      "query_id": "findrefs_err_empty_member",
+      "command": "findrefs",
+      "args": [
+        "method"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_err_empty_field_class",
+    "meta": {
+      "query_id": "findrefs_err_empty_field_class",
+      "command": "findrefs",
+      "args": [
+        "field",
+        "--class",
+        ""
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_err_empty_string",
+    "meta": {
+      "query_id": "findrefs_err_empty_string",
+      "command": "findrefs",
+      "args": [
+        "string",
+        ""
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_err_threads_zero",
+    "meta": {
+      "query_id": "findrefs_err_threads_zero",
+      "command": "findrefs",
+      "args": [
+        "--threads",
+        "0",
+        "string",
+        "token"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "fc10c9c652e51fad/findrefs_err_threads_zero",
+    "meta": {
+      "query_id": "findrefs_err_threads_zero",
+      "command": "findrefs",
+      "args": [
+        "--threads",
+        "0",
+        "string",
+        "token"
+      ],
+      "corpus_name": "no_dex",
+      "apk_sha256": "fc10c9c652e51fad73a0a4d322667c9618d40ddcb8cb52ce2fbf1a531ca77929",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_err_threads_negative",
+    "meta": {
+      "query_id": "findrefs_err_threads_negative",
+      "command": "findrefs",
+      "args": [
+        "--threads",
+        "-1",
+        "string",
+        "token"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "91269f44e74e8871/findrefs_err_error_order",
+    "meta": {
+      "query_id": "findrefs_err_error_order",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "error_order_slow_first",
+      "apk_sha256": "91269f44e74e8871c8b7443a662b8af528d5d493a5523fcc344d06bf29f55177",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bd84ed403dc6ffdd/findrefs_err_error_order",
+    "meta": {
+      "query_id": "findrefs_err_error_order",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "error_order_fast_first",
+      "apk_sha256": "bd84ed403dc6ffdd9234c33ee202a941383f901aec4453ec8070f23311d270c6",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "6251aed19b2af99d/findrefs_err_lazy_insn_map",
+    "meta": {
+      "query_id": "findrefs_err_lazy_insn_map",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "zzz_nomatch"
+      ],
+      "corpus_name": "fuzz_insns_hang",
+      "apk_sha256": "6251aed19b2af99df56797fc35395d38239952bcf264a228f4e26e0e8a179e4f",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "68d031a3f10df63c/findrefs_err_lazy_insn_map",
+    "meta": {
+      "query_id": "findrefs_err_lazy_insn_map",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "zzz_nomatch"
+      ],
+      "corpus_name": "fuzz_insns_overrun",
+      "apk_sha256": "68d031a3f10df63c44a1632b89bf58d42a90a65bc97fc0951845476fcd08e52d",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "a1faa51d4483efd3/findrefs_err_corrupt",
+    "meta": {
+      "query_id": "findrefs_err_corrupt",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "corrupt_cd",
+      "apk_sha256": "a1faa51d4483efd3fd4cf0607fa1a5a76f06214d4194b154b0e645ebd86b3d3e",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "088b61cc1039b7f5/findrefs_err_corrupt",
+    "meta": {
+      "query_id": "findrefs_err_corrupt",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "corrupt_deflate",
+      "apk_sha256": "088b61cc1039b7f5605963b5858115f557d18c41568aad9735b9c3d68fccc1a9",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "e3b0c44298fc1c14/findrefs_err_corrupt",
+    "meta": {
+      "query_id": "findrefs_err_corrupt",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "corrupt_empty",
+      "apk_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "bc70542ac1fa9a10/findrefs_err_corrupt",
+    "meta": {
+      "query_id": "findrefs_err_corrupt",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "corrupt_eocd",
+      "apk_sha256": "bc70542ac1fa9a10519495d6d3d950d1c450a168adc9604e9982dc1460e16131",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "83163e179c253434/findrefs_err_corrupt",
+    "meta": {
+      "query_id": "findrefs_err_corrupt",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "corrupt_header",
+      "apk_sha256": "83163e179c2534348bf37a5bbde620a3ad0585e5f63a6a34541f24c3f5359178",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "1a1238efcee1bdfc/findrefs_err_corrupt",
+    "meta": {
+      "query_id": "findrefs_err_corrupt",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "corrupt_trunc_70",
+      "apk_sha256": "1a1238efcee1bdfc73303d3c3eef6548442fee6270c1804426efb867a62f79e5",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "2412fc3f882885ac/findrefs_err_corrupt",
+    "meta": {
+      "query_id": "findrefs_err_corrupt",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "corrupt_trunc_90",
+      "apk_sha256": "2412fc3f882885acfc24bfdd1919f1fe268a9b7bae6b095c36fc60a559401c31",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "e429532f6819cb23/findrefs_err_corrupt",
+    "meta": {
+      "query_id": "findrefs_err_corrupt",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "corrupt_trunc_b0",
+      "apk_sha256": "e429532f6819cb23c398acd9a3b7a284acea36c67fc7a2670e028ee85649b3de",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "98af4eb00ef29c45/findrefs_err_corrupt",
+    "meta": {
+      "query_id": "findrefs_err_corrupt",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "fuzz_classdata_overflow",
+      "apk_sha256": "98af4eb00ef29c45abef98bec53de51768ed31e4972986f584503e918f8dd492",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "2958733b9198ac60/findrefs_err_corrupt",
+    "meta": {
+      "query_id": "findrefs_err_corrupt",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "fuzz_code_item_partial",
+      "apk_sha256": "2958733b9198ac60ed736c03956f60e73d394e2ac24008f5807149fef847fa35",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "21acc6d5fd117367/findrefs_err_corrupt",
+    "meta": {
+      "query_id": "findrefs_err_corrupt",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "fuzz_cross_class_alias",
+      "apk_sha256": "21acc6d5fd11736768437043c045a504e1fe103062b1be63c4ba7420d7058284",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "3fa0a93e077f460a/findrefs_err_corrupt",
+    "meta": {
+      "query_id": "findrefs_err_corrupt",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "fuzz_dup_static",
+      "apk_sha256": "3fa0a93e077f460a7c1f77bb191acab57d92c4e3cb7c0ffa503ebb9f233aa399",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "f2abcaa719fec771/findrefs_err_corrupt",
+    "meta": {
+      "query_id": "findrefs_err_corrupt",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "fuzz_dup_virtual",
+      "apk_sha256": "f2abcaa719fec7716ead4ff9f4c5d1a239c7de34ca19fe7ff84d08fa5a81f759",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "f63d09683819350e/findrefs_err_corrupt",
+    "meta": {
+      "query_id": "findrefs_err_corrupt",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "fuzz_getclass_string",
+      "apk_sha256": "f63d09683819350e82ac18ef4d340d65411b69211f6df1209149ee1db735b796",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "6251aed19b2af99d/findrefs_err_corrupt",
+    "meta": {
+      "query_id": "findrefs_err_corrupt",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "fuzz_insns_hang",
+      "apk_sha256": "6251aed19b2af99df56797fc35395d38239952bcf264a228f4e26e0e8a179e4f",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "68d031a3f10df63c/findrefs_err_corrupt",
+    "meta": {
+      "query_id": "findrefs_err_corrupt",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "fuzz_insns_overrun",
+      "apk_sha256": "68d031a3f10df63c44a1632b89bf58d42a90a65bc97fc0951845476fcd08e52d",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "21889a852322d52a/findrefs_err_corrupt",
+    "meta": {
+      "query_id": "findrefs_err_corrupt",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "fuzz_proto_typelist",
+      "apk_sha256": "21889a852322d52ab1e4c76d0a7bab08cd79c0dcfe215a1c26a9ac180e7c861b",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "0c100ae02c066535/findrefs_err_corrupt",
+    "meta": {
+      "query_id": "findrefs_err_corrupt",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "fuzz_skip_uleb",
+      "apk_sha256": "0c100ae02c0665351838d7564c3865c282367e8c2be241170c82d14c44fb48d1",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "b6f906177311c6d1/findrefs_err_corrupt",
+    "meta": {
+      "query_id": "findrefs_err_corrupt",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "fuzz_surrogate_name",
+      "apk_sha256": "b6f906177311c6d1fa95043a11354e6cf7c14bb9457610ca091616e5ded7a5d4",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "fc10c9c652e51fad/findrefs_no_dex_entries",
+    "meta": {
+      "query_id": "findrefs_no_dex_entries",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token"
+      ],
+      "corpus_name": "no_dex",
+      "apk_sha256": "fc10c9c652e51fad73a0a4d322667c9618d40ddcb8cb52ce2fbf1a531ca77929",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_argparse_ambiguous_prefix",
+    "meta": {
+      "query_id": "findrefs_argparse_ambiguous_prefix",
+      "command": "findrefs",
+      "args": [
+        "--thr",
+        "2",
+        "string",
+        "token"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3",
+      "exit_code_only": true
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_argparse_unique_prefix",
+    "meta": {
+      "query_id": "findrefs_argparse_unique_prefix",
+      "command": "findrefs",
+      "args": [
+        "--deb",
+        "method",
+        "--cl",
+        "example",
+        "--fuzzy"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_argparse_short_attached",
+    "meta": {
+      "query_id": "findrefs_argparse_short_attached",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "-o/dev/null",
+        "tok.n"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_argparse_double_dash",
+    "meta": {
+      "query_id": "findrefs_argparse_double_dash",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "--",
+        "-tok"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_argparse_bad_int",
+    "meta": {
+      "query_id": "findrefs_argparse_bad_int",
+      "command": "findrefs",
+      "args": [
+        "--threads",
+        "two",
+        "string",
+        "token"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3",
+      "exit_code_only": true
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_argparse_bad_choice",
+    "meta": {
+      "query_id": "findrefs_argparse_bad_choice",
+      "command": "findrefs",
+      "args": [
+        "strings",
+        "token"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3",
+      "exit_code_only": true
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_argparse_equals",
+    "meta": {
+      "query_id": "findrefs_argparse_equals",
+      "command": "findrefs",
+      "args": [
+        "--threads=2",
+        "string",
+        "token"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_argparse_thread_alias",
+    "meta": {
+      "query_id": "findrefs_argparse_thread_alias",
+      "command": "findrefs",
+      "args": [
+        "--thread",
+        "2",
+        "string",
+        "token"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_argparse_debug_after_leaf",
+    "meta": {
+      "query_id": "findrefs_argparse_debug_after_leaf",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "token",
+        "--debug"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3",
+      "exit_code_only": true
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_argparse_missing_value",
+    "meta": {
+      "query_id": "findrefs_argparse_missing_value",
+      "command": "findrefs",
+      "args": [
+        "string"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3",
+      "exit_code_only": true
+    }
+  },
+  {
+    "path": "82f41a62ed7ca754/findrefs_debug_single_entry",
+    "meta": {
+      "query_id": "findrefs_debug_single_entry",
+      "command": "findrefs",
+      "args": [
+        "--debug",
+        "--threads",
+        "1",
+        "string",
+        "token"
+      ],
+      "corpus_name": "stored",
+      "apk_sha256": "82f41a62ed7ca754648c22d8bd441ca3c76ef0d2d31e4bd7921a18a9065b73c0",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "fc10c9c652e51fad/findrefs_debug_no_entries",
+    "meta": {
+      "query_id": "findrefs_debug_no_entries",
+      "command": "findrefs",
+      "args": [
+        "--debug",
+        "string",
+        "token"
+      ],
+      "corpus_name": "no_dex",
+      "apk_sha256": "fc10c9c652e51fad73a0a4d322667c9618d40ddcb8cb52ce2fbf1a531ca77929",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "1ee7fafe1087ed54/findrefs_ads_string_create",
+    "meta": {
+      "query_id": "findrefs_ads_string_create",
+      "command": "findrefs",
+      "args": [
+        "string",
+        "create"
+      ],
+      "corpus_name": "ads_solution",
+      "apk_sha256": "1ee7fafe1087ed5449a1eff865524c62c2516db1a308c3be550e7ea6006188a5",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "1ee7fafe1087ed54/findrefs_ads_method_oncreate",
+    "meta": {
+      "query_id": "findrefs_ads_method_oncreate",
+      "command": "findrefs",
+      "args": [
+        "method",
+        "onCreate"
+      ],
+      "corpus_name": "ads_solution",
+      "apk_sha256": "1ee7fafe1087ed5449a1eff865524c62c2516db1a308c3be550e7ea6006188a5",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
+      "git_dirty": false,
+      "diff_sha256": null,
+      "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+      "androguard_version": "4.1.3"
+    }
+  },
+  {
+    "path": "1ee7fafe1087ed54/findrefs_ads_field_fuzzy_class",
+    "meta": {
+      "query_id": "findrefs_ads_field_fuzzy_class",
+      "command": "findrefs",
+      "args": [
+        "field",
+        "--class",
+        "Notification",
+        "--fuzzy-class"
+      ],
+      "corpus_name": "ads_solution",
+      "apk_sha256": "1ee7fafe1087ed5449a1eff865524c62c2516db1a308c3be550e7ea6006188a5",
+      "oracle_git_revision": "oracle-m1-11-g410da90",
       "git_dirty": false,
       "diff_sha256": null,
       "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",

@@ -1,0 +1,2 @@
+usage: main.py findrefs apk_path string [-h] [-o OUTPUT] value
+main.py findrefs apk_path string: error: the following arguments are required: value

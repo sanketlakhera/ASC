@@ -1,0 +1,3 @@
+[APK] [PN] 'classes.dex' inflate=N.N us process=N.N us
+[APK] for_each_findrefs total=N.N us count=N workers=N
+[DEBUG] Total Execution Time: N.N us

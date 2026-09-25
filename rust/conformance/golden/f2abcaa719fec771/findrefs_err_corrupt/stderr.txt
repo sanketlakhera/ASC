@@ -1,0 +1,1 @@
+Error: bad code_item offset

@@ -1,0 +1,1 @@
+Error: field query needs at least one of class or field name

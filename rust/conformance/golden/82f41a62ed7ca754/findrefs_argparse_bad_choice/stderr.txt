@@ -1,0 +1,3 @@
+usage: main.py findrefs [-h] [--debug] [--threads THREADS]
+                        apk_path {string,type,method,field} ...
+main.py findrefs: error: argument find_type: invalid choice: 'strings' (choose from string, type, method, field)

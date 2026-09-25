@@ -1,0 +1,1 @@
+Error: method query needs at least one of class or method name

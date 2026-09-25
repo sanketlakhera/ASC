@@ -1,0 +1,15 @@
+{
+  "query_id": "findrefs_err_corrupt",
+  "command": "findrefs",
+  "args": [
+    "string",
+    "token"
+  ],
+  "corpus_name": "corrupt_trunc_90",
+  "apk_sha256": "2412fc3f882885acfc24bfdd1919f1fe268a9b7bae6b095c36fc60a559401c31",
+  "oracle_git_revision": "oracle-m1-11-g410da90",
+  "git_dirty": false,
+  "diff_sha256": null,
+  "python_version": "3.12.14 (main, Sep  1 2026, 14:09:53) [Clang 22.1.3 ]",
+  "androguard_version": "4.1.3"
+}
