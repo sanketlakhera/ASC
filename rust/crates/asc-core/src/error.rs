@@ -9,7 +9,10 @@ pub enum AscError {
     BadCompressedDataRange,
     UnsupportedCompressionMethod(u16),
     CorruptDeflateStream(String),
-    SizeMismatch { expected: u32, got: usize },
+    SizeMismatch {
+        expected: u32,
+        got: usize,
+    },
     ApkFileNotFound(String),
     BadDexMagicOrHeaderSize,
     BadStringIdsRange,
@@ -27,6 +30,10 @@ pub enum AscError {
     UnterminatedUleb128,
     UnterminatedSleb128,
     UnterminatedStringDataItem,
+    /// A findrefs pattern Python's `re` rejects, with the text it prints.
+    PatternError(String),
+    /// A findrefs pattern Python accepts but `regex::bytes` cannot express.
+    UnsupportedPattern(String),
     ClassNotFoundInApk(String),
     ClassNotFoundInDex(String),
     ClassNotIndexed(String),
@@ -67,6 +74,8 @@ impl fmt::Display for AscError {
             Self::UnterminatedUleb128 => write!(f, "unterminated uleb128"),
             Self::UnterminatedSleb128 => write!(f, "unterminated sleb128"),
             Self::UnterminatedStringDataItem => write!(f, "unterminated string_data_item"),
+            Self::PatternError(msg) => write!(f, "{msg}"),
+            Self::UnsupportedPattern(what) => write!(f, "unsupported pattern syntax: {what}"),
             Self::ClassNotFoundInApk(name) => write!(f, "Class {name} not found in APK."),
             Self::ClassNotFoundInDex(name) => write!(f, "Class {name} not found in DEX."),
             Self::ClassNotIndexed(name) => write!(f, "class not indexed: {name}"),

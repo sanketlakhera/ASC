@@ -1,8 +1,10 @@
 #![forbid(unsafe_code)]
 
+pub mod apk;
 mod bytes;
 pub mod dex;
 pub mod error;
+pub mod findrefs;
 pub mod inflate;
 pub mod leb128;
 pub mod mutf8;

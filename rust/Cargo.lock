@@ -78,6 +78,7 @@ name = "asc-core"
 version = "0.1.0"
 dependencies = [
  "flate2",
+ "memchr",
  "proptest",
  "regex",
  "serde",

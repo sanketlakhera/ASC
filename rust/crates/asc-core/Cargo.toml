@@ -7,6 +7,8 @@ authors.workspace = true
 
 [dependencies]
 flate2 = { version = "1.0", default-features = false, features = ["zlib-rs"] }
+memchr = "2.7"
+regex = { version = "1.11", default-features = false, features = ["std", "perf"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 sha2 = "0.10"

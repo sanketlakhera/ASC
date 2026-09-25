@@ -14,6 +14,12 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fs::{self, File};
 use std::path::PathBuf;
 
+mod argparse;
+mod bench;
+mod dump_findrefs;
+mod findrefs_cmd;
+mod probes;
+
 #[derive(Parser, Debug)]
 #[command(name = "asc", version, about = "Droid ASC command-line tool")]
 struct Cli {
@@ -31,6 +37,35 @@ enum Commands {
         #[arg(long)]
         output_dir: Option<PathBuf>,
     },
+    /// findrefs stages as JSON (rust/conformance/dump_findrefs.py).
+    #[command(name = "dump-findrefs", hide = true)]
+    DumpFindrefs { apk: PathBuf },
+    /// Instruction-walk verifier over stdin streams (verify_differential.py).
+    #[command(name = "verify-insns", hide = true)]
+    VerifyInsns,
+    /// Pattern translation and matching over a haystack (regex_differential.py).
+    #[command(name = "regex-probe", hide = true)]
+    RegexProbe { haystack: PathBuf },
+    /// The reference workload's findrefs stages, timed (benchmark_compare.py).
+    #[command(name = "bench-findrefs", hide = true)]
+    BenchFindrefs { dex: PathBuf },
+}
+
+/// Maps an APK the way the dumps expect: `{"error": ...}` for a missing or
+/// short file, as Python's dump scripts report it.
+fn map_apk_for_dump(apk: &std::path::Path) -> Result<Mmap, Value> {
+    if !apk.exists() {
+        return Err(json!({ "error": format!("APK file not found: {}", apk.display()) }));
+    }
+    let size = fs::metadata(apk)
+        .map_err(|e| json!({ "error": e.to_string() }))?
+        .len();
+    if size < 22 {
+        return Err(json!({ "error": "EOCD not found" }));
+    }
+    let file = File::open(apk).map_err(|e| json!({ "error": e.to_string() }))?;
+    // SAFETY: read-only map; every parser read is bounds-checked.
+    unsafe { Mmap::map(&file) }.map_err(|e| json!({ "error": e.to_string() }))
 }
 
 fn sha256_hex(bytes: &[u8]) -> String {
@@ -588,8 +623,43 @@ fn dump_apk_primitives(apk_bytes: &[u8], extra_queries: &[String]) -> Value {
 }
 
 fn main() {
+    let t_start = std::time::Instant::now();
+    // findrefs follows Python's argparse grammar, not clap's.
+    let argv: Vec<Vec<u8>> = std::env::args_os()
+        .map(|a| a.into_encoded_bytes())
+        .collect();
+    if argv.get(1).map(Vec::as_slice) == Some(b"findrefs") {
+        std::process::exit(findrefs_cmd::run(
+            argv.get(2..).unwrap_or_default(),
+            t_start,
+        ));
+    }
     let cli = Cli::parse();
     match cli.command {
+        Commands::DumpFindrefs { apk } => {
+            let dump = match map_apk_for_dump(&apk) {
+                Ok(mm) => dump_findrefs::dump_apk(&mm),
+                Err(v) => v,
+            };
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&dump).unwrap_or_default()
+            );
+        }
+        Commands::VerifyInsns => std::process::exit(probes::verify_insns()),
+        Commands::BenchFindrefs { dex } => {
+            if let Err(e) = bench::run(&dex) {
+                eprintln!("Error: {e}");
+                std::process::exit(1);
+            }
+        }
+        Commands::RegexProbe { haystack } => {
+            let Ok(bytes) = fs::read(&haystack) else {
+                eprintln!("cannot read {}", haystack.display());
+                std::process::exit(1);
+            };
+            std::process::exit(probes::regex_probe(&bytes));
+        }
         Commands::DumpPrimitives {
             apk,
             queries,
